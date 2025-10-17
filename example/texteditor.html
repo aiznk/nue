@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Text Editor</title>
+	<style>
+		* {
+			box-sizing: border-box
+		}
+		.root {
+			display: flex;
+			flex-direction: column;
+			width: 800px;
+			height: 500px;
+			border: 1px solid gray;
+			padding: 1rem;
+		}
+		.top {
+			flex: 1;
+			display: flex;
+			justify-content: space-between;
+		}
+		.bottom {
+
+		}
+		.left {
+			width: 20%;
+			padding-right: 1rem;
+		}
+		.right {
+			width: 80%;
+		}
+		.list {
+			list-style: none;
+			padding: 0;
+		}
+		.list-item {
+			border: 1px solid gray;
+			padding: 0.5rem 0.2rem;
+			cursor: pointer;
+		}
+		.list-item:hover {
+			background: #eee;
+		}
+		.list-item:not(:last-child) {
+			margin-bottom: 0.5rem;
+		}
+		.text-label {
+			margin-bottom: 1rem;
+		}
+		.text-frame {
+			width: 100%;
+			height: 100%;			
+			display: flex;
+			flex-direction: column;
+		}
+		.textarea {
+			width: 100%;
+			flex: 1;
+			padding: 1rem;
+		}
+	</style>
+	<script type="module">
+		import * as nue from "../src/main.js"
+
+		const AAA = `This is AAA text.
+This is AAA text.
+This is AAA text.
+`
+		const BBB = `This is BBB text.
+This is BBB text.
+This is BBB text.
+`
+		const CCC = `This is CCC text.
+This is CCC text.
+This is CCC text.
+`
+		class List extends nue.Ul {
+			constructor () {
+				super({ class: 'list' })
+			}
+		}
+
+		class ListItem extends nue.Li {
+			constructor (text) {
+				super({ class: 'list-item' })
+				this.text = text
+				this.setText(text)
+			}
+
+			onClick (ev) {
+				ev.text = this.text
+				this.emit('clickListItem', ev)
+			}
+		}
+
+		class Textarea extends nue.Textarea {
+			constructor () {
+				super({ class: 'textarea' })
+			}
+
+			onInput (ev) {
+				this.emit('inputText', ev)
+			}
+		}
+
+		class TextFrame extends nue.Div {
+			constructor (refCurrentItem) {
+				super({ class: 'text-frame' })
+				this.refCurrentItem = refCurrentItem
+
+				this.label = this.gen('label', 'Item:', { class: 'text-label' })
+				this.textarea = new Textarea()
+				this.add(this.textarea)
+
+				this.default = `Please select list item.`
+				this.textarea.setValue(this.default)
+
+				this.refCurrentItem.onSet((_, itemName) => {
+					this.update(itemName)
+				})
+			}
+
+			update (itemName) {
+				this.label.setText('Item: ' + itemName)
+
+				switch (itemName) {
+				case 'aaa': this.textarea.setValue(AAA); break
+				case 'bbb': this.textarea.setValue(BBB); break
+				case 'ccc': this.textarea.setValue(CCC); break
+				}
+			}
+		}
+
+		class Root extends nue.Root {
+			constructor () {
+				super('div', { class: 'root' })
+
+				this.refCurrentItem = nue.ref(null)
+
+				this.top = this.gen('div', { class: 'top' })
+				this.bottom = this.gen('div', { class: 'bottom' })
+				
+				this.left = new nue.Div({ class: 'left' })
+				this.right = new nue.Div({ class: 'right' })
+				this.top.add(this.left)
+				this.top.add(this.right)
+
+				this.status = new nue.P({ class: 'status' })
+				this.status.setText('welcome')
+				this.bottom.add(this.status)
+
+				this.list = new List()
+				this.left.add(this.list)
+				this.list.add(new ListItem('aaa'))
+				this.list.add(new ListItem('bbb'))
+				this.list.add(new ListItem('ccc'))
+
+				this.textarea = new TextFrame(this.refCurrentItem)
+				this.right.add(this.textarea)
+			}
+
+			receive (key, ev) {
+				switch (key) {
+				case 'clickListItem':
+					this.refCurrentItem.value = ev.text
+					this.status.setText(`selected list item "${ev.text}"`)
+					break
+				case 'inputText':
+					console.log(ev)
+					this.status.setText(`input! "${ev.data}"`)
+					break
+				}
+			}
+		}
+
+		document.addEventListener('DOMContentLoaded', () => {
+			let root = new Root()
+			root.mount('#app')
+		})
+	</script>
+</head>
+<body>
+	<div id="app"></div>
+</body>
+</html>

@@ -67,6 +67,8 @@ export class Component {
 		case 'button': c = new Button(...args); break
 		case 'textarea': c = new Textarea(...args); break
 		case 'section': c = new Section(...args); break
+		case 'label': c = new Label(...args); break
+		case 'p': c = new P(...args); break
 		}
 
 		this.add(c)
