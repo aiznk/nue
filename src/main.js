@@ -132,6 +132,7 @@ class TemplateTag {
 				}
 			} else if (m === 10) {
 				if (c === '"') {
+					this.index++
 					break
 				} else {
 					val += c
@@ -251,14 +252,6 @@ class Template {
 		let tag = this.tTags.shift()
 		// console.log('tree:', dep, tag.name, tag.type)
 
-		/*
-			<div>
-				<span>123</span>
-				<p>
-					<span>223</span>
-				</p>
-			</div>
-		*/
 		if (tag.type === 'begin') {
 			let compo
 			if (this.hasComponent(tag.name)) {
@@ -268,12 +261,16 @@ class Template {
 			}
 			compo.parent = parent
 			parent = compo
+			let childs = []
 			this.tree({ 
 				begin: tag,
 				parent,
-				children: compo.children,
+				children: childs,
 				dep: dep+1,
 			})
+			for (let child of childs) {
+				compo.add(child)
+			}
 			children.push(compo)
 		} else if (tag.type === 'end') {
 			if (begin) {
@@ -293,7 +290,7 @@ class Template {
 			children.push(compo)			
 		} else if (tag.type === 'text') {
 			let compo = new Tag('text')
-			compo.text = tag.text
+			compo.setText(tag.text)
 			children.push(compo)
 		}
 
@@ -307,14 +304,26 @@ export class Component {
 		this.attrs = Object.assign({}, attrs)
 		this.parent = attrs.parent || null
 		this.children = []
-		this.elem = document.createElement(name)
+		if (name === 'text') {
+			this.elem = document.createTextNode('')
+		} else {
+			this.elem = document.createElement(name)
+		}
 		this.setElementAttrs(attrs)
 		this.bindEvents()
 	}
 
-	template (code) {
+	template (code, {
+		components={}
+	}={}) {
 		let tmpl = new Template()
-		tmpl.parse(code)
+		tmpl.parse(code, {
+			components,
+		})
+		this.clear()
+		for (let child of tmpl.root.children) {
+			this.add(child)
+		}
 	}
 
 	gen (cname, ...args) {
@@ -400,6 +409,7 @@ export class Component {
 	}
 
 	setAttr (key, val) {
+		console.log(`key[${key}] val[${val}]`)
 		key = this.convAttrKey(key)
 		this.elem.setAttribute(key, val)
 		return this
@@ -672,6 +682,12 @@ export function test () {
 	let t
 
 	t = new Template()
+	t.parse('<div class="hoge"></div>')
+	console.assert(t.root.children.length === 1)
+	console.assert(t.root.children[0].name === 'div')
+	console.assert(t.root.children[0].attrs['class'] === 'hoge')
+
+	t = new Template()
 	t.parse('<div><span>123</span><p id="223" maxlength=323>423</p><img alt="hige" /></div>')
 	// console.log(t)
 	console.assert(t.root.children.length === 1)
@@ -689,9 +705,9 @@ export function test () {
 	console.assert(t.root.children[0].children[2].attrs['alt'] === 'hige')
 
 	t = new Template()
-	let Hoge = new Tag('Hoge')
-	let Moge = new Tag('Moge')
-	let Oge = new Tag('Oge')
+	let Hoge = new Tag('div')
+	let Moge = new Tag('p')
+	let Oge = new Tag('span')
 	t.parse(`<div><Hoge>123</Hoge><Moge id="223" maxlength=323>423</Moge><Oge age=20 weight="60" /></div>`, {
 		components: {
 			Hoge, Moge, Oge,
@@ -701,9 +717,9 @@ export function test () {
 	console.assert(t.root.children.length === 1)
 	console.assert(t.root.children[0].name === 'div')
 	console.assert(t.root.children[0].children.length === 3)
-	console.assert(t.root.children[0].children[0].name === 'Hoge')
-	console.assert(t.root.children[0].children[1].name === 'Moge')
-	console.assert(t.root.children[0].children[2].name === 'Oge')
+	console.assert(t.root.children[0].children[0].name === 'div')
+	console.assert(t.root.children[0].children[1].name === 'p')
+	console.assert(t.root.children[0].children[2].name === 'span')
 
 	t = new Template()
 	t.parse(`aaa<div>bbb<p>ccc</p>ddd</div>eee`)

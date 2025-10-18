@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Todo List</title>
+	<script type="module">
+		import * as nue from "../src/main.js"
+
+		class TodoList extends nue.Ul {
+			constructor () {
+				super({ class: 'todo-list' })
+			}
+		}
+
+		class TodoInput extends nue.Input {
+			constructor () {
+				super({ class: 'todo-input' })
+			}
+
+			onKeydown (ev) {
+				if (ev.code === 'Enter') {
+					this.emit('enterInput', ev.target.value)
+				}
+			}
+		}
+
+		class TodoEditor extends nue.Div {
+			constructor () {
+				super({ class: 'todo-editor' })
+				this.input = new TodoInput()
+				this.template(`
+					<label>Todo: </label>
+					<TodoInput />
+				`, {
+					components: {
+						TodoInput: this.input,
+					},
+				})
+			}
+		}
+
+		class Root extends nue.Root {
+			constructor () {
+				super('div', { class: 'todo-app' })
+
+				this.list = new TodoList()
+				this.editor = new TodoEditor()
+				this.template(`
+					<div class="row">
+						<TodoList />
+						<TodoEditor />
+					</div>
+				`, {
+					components: {
+						TodoList: this.list,
+						TodoEditor: this.editor,
+					}
+				})
+				console.log(this.children)
+			}
+
+			receive (key, ev) {
+				switch (key) {
+				case 'enterInput': console.log(ev); break
+				}
+			}
+		}
+
+		document.addEventListener('DOMContentLoaded', () => {
+			let root = new Root()
+			root.mount('#app')
+		})
+	</script>
+</head>
+<body>
+	<div id="app"></div>
+</body>
+</html>
