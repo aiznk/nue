@@ -4,12 +4,79 @@
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<title>Todo List</title>
+	<style>
+		.todo-app {
+			border: 1px solid gray;
+			padding: 1rem;
+			width: fit-content;
+		}
+		.todo-editor {
+			border: 1px solid gray;
+			padding: 1rem;
+			margin-bottom: 1rem;
+		}
+		.todo-list {
+			list-style: none;
+			border: 1px solid gray;
+			padding: 1rem;
+			margin: 0;
+		}
+		.todo-list-item {
+			display: flex;
+			justify-content: space-between;
+		}
+		.todo-list-item:not(:last-child) {
+			margin-bottom: 0.5rem;
+		}
+		.remove-item-btn {
+			color: red;
+			cursor: pointer;
+		}
+	</style>
 	<script type="module">
 		import * as nue from "../src/main.js"
 
 		class TodoList extends nue.Ul {
 			constructor () {
 				super({ class: 'todo-list' })
+			}
+
+			receive (key, ev) {
+				switch (key) {
+				case 'removeItem': this.removeItem(ev); break
+				}
+			}
+
+			removeItem (itemText) {
+				let found
+				for (let child of this.children) {
+					if (child.text === itemText) {
+						found = child
+						break
+					}
+				}
+				if (found) {
+					this.remove(found)
+				}
+			}
+		}
+
+		class TodoListItem extends nue.Li {
+			constructor (text) {
+				super({ class: 'todo-list-item' })
+
+				this.text = text
+				this.removeBtn = new nue.Button('X', ev => {
+					this.emit('removeItem', text)
+				}, { class: 'remove-item-btn' })
+				this.template(`
+					<span>${text}</span>
+					<RemoveBtn />
+				`, {
+					components: {
+						RemoveBtn: this.removeBtn,
+					}
+				})
 			}
 		}
 
@@ -21,6 +88,7 @@
 			onKeydown (ev) {
 				if (ev.code === 'Enter') {
 					this.emit('enterInput', ev.target.value)
+					this.setValue('')
 				}
 			}
 		}
@@ -48,8 +116,8 @@
 				this.editor = new TodoEditor()
 				this.template(`
 					<div class="row">
-						<TodoList />
 						<TodoEditor />
+						<TodoList />
 					</div>
 				`, {
 					components: {
@@ -62,8 +130,12 @@
 
 			receive (key, ev) {
 				switch (key) {
-				case 'enterInput': console.log(ev); break
+				case 'enterInput': this.addTodoItem(ev); break
 				}
+			}
+
+			addTodoItem (todoText) {
+				this.list.add(new TodoListItem(todoText))
 			}
 		}
 
