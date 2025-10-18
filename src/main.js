@@ -324,6 +324,7 @@ export class Component {
 		for (let child of tmpl.root.children) {
 			this.add(child)
 		}
+		return this
 	}
 
 	gen (cname, ...args) {
@@ -347,10 +348,12 @@ export class Component {
 
 	removeEvent (name, fn) {
 		this.elem.removeEventListener(name, fn)
+		return this
 	}
 
 	bindEvent (name, fn) {
 		this.elem.addEventListener(name, fn)
+		return this
 	}
 
 	bindEvents () {
@@ -364,6 +367,7 @@ export class Component {
 		this.bindEvent('mouseup', ev => { this.onMouseUp(ev) })
 		this.bindEvent('mouseenter', ev => { this.onMouseEnter(ev) })
 		this.bindEvent('contextmenu', ev => { this.onContextMenu(ev) })
+		return this
 	}
 
 	onInput (ev) {}
@@ -437,12 +441,14 @@ export class Component {
 		let css = this.parseStyle()
 		css['display'] = ''
 		this.setCSS(css)
+		return this
 	}
 
 	hide () {
 		let css = this.parseStyle()
 		css['display'] = 'none'
 		this.setCSS(css)		
+		return this
 	}
 
 	setCSS (css /* Object */) {
@@ -451,6 +457,7 @@ export class Component {
 			style += `${key}: ${css[key]};`
 		}
 		this.setStyle(style)
+		return this
 	}
 
 	setStyle (val) {
@@ -478,11 +485,18 @@ export class Component {
 		return this
 	}
 
+	remove (child) {
+		this.children = this.children.filter(c => c != child)
+		this.elem.removeChild(child.elem)
+		return this
+	}
+
 	clear () {
 		for (let child of this.children) {
 			this.elem.removeChild(child.elem)
 		}
 		this.children = []
+		return this
 	}
 }
 
