@@ -545,36 +545,42 @@ export class Hr extends Tag {
 export class H1 extends Tag {
 	constructor (text, attrs={}) {
 		super('h1', attrs)
+		this.setText(text)
 	}
 }
 
 export class H2 extends Tag {
 	constructor (text, attrs={}) {
 		super('h2', attrs)
+		this.setText(text)
 	}
 }
 
 export class H3 extends Tag {
 	constructor (text, attrs={}) {
 		super('h3', attrs)
+		this.setText(text)
 	}
 }
 
 export class H4 extends Tag {
 	constructor (text, attrs={}) {
 		super('h4', attrs)
+		this.setText(text)
 	}
 }
 
 export class H5 extends Tag {
 	constructor (text, attrs={}) {
 		super('h5', attrs)
+		this.setText(text)
 	}
 }
 
 export class H6 extends Tag {
 	constructor (text, attrs={}) {
 		super('h6', attrs)
+		this.setText(text)
 	}
 }
 
