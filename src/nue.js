@@ -298,10 +298,19 @@ class Template {
 	}
 }
 
+function _oget(o, k, d=null) {
+	if (k in o) {
+		return o[k]
+	} else {
+		return d
+	}
+}
+
 export class Component {
-	constructor (name, attrs={}) {
+	constructor (name, attrs={}, opts={}) {
 		this.name = name
 		this.attrs = Object.assign({}, attrs)
+		this.opts = Object.assign({}, opts)
 		this.parent = attrs.parent || null
 		this.children = []
 		if (name === 'text') {
@@ -309,8 +318,8 @@ export class Component {
 		} else {
 			this.elem = document.createElement(name)
 		}
-		this.setElementAttrs(attrs)
-		this.bindEvents()
+		this._setElementAttrs(attrs)
+		this._bindEvents()
 	}
 
 	template (code, {
@@ -356,23 +365,42 @@ export class Component {
 		return this
 	}
 
-	bindEvents () {
-		this.bindEvent('input', ev => { this.onInput(ev) })
-		this.bindEvent('keyup', ev => { this.onKeyup(ev) })
-		this.bindEvent('keydown', ev => { this.onKeydown(ev) })
-		this.bindEvent('click', ev => { this.onClick(ev) })
-		this.bindEvent('dblclick', ev => { this.onDblClick(ev) })
-		this.bindEvent('change', ev => { this.onChange(ev) })
-		this.bindEvent('mousedown', ev => { this.onMouseDown(ev) })
-		this.bindEvent('mouseup', ev => { this.onMouseUp(ev) })
-		this.bindEvent('mousemove', ev => { this.onMouseMove(ev) })
-		this.bindEvent('mouseenter', ev => { this.onMouseEnter(ev) })
-		this.bindEvent('contextmenu', ev => { this.onContextMenu(ev) })
-		this.bindEvent('pointermove', ev => { this.onPointerMove(ev) })
-		this.bindEvent('pointerdown', ev => { this.onPointerDown(ev) })
-		this.bindEvent('pointerup', ev => { this.onPointerUp(ev) })
-		this.bindEvent('pointercancel', ev => { this.onPointerCancel(ev) })
-		this.bindEvent('wheel', ev => { this.onWheel(ev) })
+	_bindEvents () {
+		const map = {
+			'input': this.onInput.bind(this),
+			'keyup': this.onKeyup.bind(this),
+			'keydown': this.onKeydown.bind(this),
+			'click': this.onClick.bind(this),
+			'dblclick': this.onDblClick.bind(this),
+			'change': this.onChange.bind(this),
+			'mousedown': this.onMouseDown.bind(this),
+			'mouseup': this.onMouseUp.bind(this),
+			'mousemove': this.onMouseMove.bind(this),
+			'mouseenter': this.onMouseEnter.bind(this),
+			'contextmenu': this.onContextMenu.bind(this),
+			'pointermove': this.onPointerMove.bind(this),
+			'pointerdown': this.onPointerDown.bind(this),
+			'pointerup': this.onPointerUp.bind(this),
+			'pointercancel': this.onPointerCancel.bind(this),
+			'wheel': this.onWheel.bind(this),
+		}
+		const events = _oget(this.opts, 'events', null)
+		if (events == null) {
+			for (let key in map) {
+				this.elem.addEventListener(key, map[key], {
+					passive: true,
+				})
+			}			
+		} else if (Array.isArray(events)) {
+			for (let key in map) {
+				if (events.includes(key)) {
+					this.elem.addEventListener(key, map[key], {
+						passive: true,
+					})
+				}
+			}
+		}
+
 		return this
 	}
 
@@ -407,7 +435,7 @@ export class Component {
 		return this
 	}
 
-	setElementAttrs (attrs) {
+	_setElementAttrs (attrs) {
 		for (let key in attrs) {
 			this.setAttr(key, attrs[key])
 		}
@@ -524,132 +552,159 @@ export class Component {
 	}
 }
 
+function _setopts (opts, key, events) {
+	if (!(key in opts)) {
+		opts[key] = events
+	}
+	return opts
+}
+
 export class Tag extends Component {
-	constructor (name, attrs={}) {
-		super(name, attrs)
+	constructor (name, attrs={}, opts={}) {
+		opts = _setopts(opts, 'events', [])
+		super(name, attrs, opts)
 	}
 }
 
 export class Ul extends Tag {
-	constructor (attrs={}) {
-		super('ul', attrs)
+	constructor (attrs={}, opts={}) {
+		opts = _setopts(opts, 'events', [])
+		super('ul', attrs, opts)
 	}
 }
 
 export class Ol extends Tag {
-	constructor (attrs={}) {
-		super('ol', attrs)
+	constructor (attrs={}, opts={}) {
+		opts = _setopts(opts, 'events', [])
+		super('ol', attrs, opts)
 	}
 }
 
 export class Li extends Tag {
-	constructor (attrs={}) {
-		super('li', attrs)
+	constructor (attrs={}, opts={}) {
+		opts = _setopts(opts, 'events', ['click'])
+		super('li', attrs, opts)
 	}
 }
 
 export class Span extends Tag {
-	constructor (attrs={}) {
-		super('span', attrs)
+	constructor (attrs={}, opts={}) {
+		opts = _setopts(opts, 'events', [])
+		super('span', attrs, opts)
 	}
 }
 
 export class Div extends Tag {
-	constructor (attrs={}) {
-		super('div', attrs)
+	constructor (attrs={}, opts={}) {
+		opts = _setopts(opts, 'events', [])
+		super('div', attrs, opts)
 	}
 }
 
 export class Hr extends Tag {
-	constructor (text, attrs={}) {
-		super('hr', attrs)
+	constructor (text, attrs={}, opts={}) {
+		opts = _setopts(opts, 'events', [])
+		super('hr', attrs, opts)
 	}
 }
 
 export class H1 extends Tag {
-	constructor (text, attrs={}) {
-		super('h1', attrs)
+	constructor (text, attrs={}, opts={}) {
+		opts = _setopts(opts, 'events', [])
+		super('h1', attrs, opts)
 		this.setText(text)
 	}
 }
 
 export class H2 extends Tag {
-	constructor (text, attrs={}) {
-		super('h2', attrs)
+	constructor (text, attrs={}, opts={}) {
+		opts = _setopts(opts, 'events', [])
+		super('h2', attrs, opts)
 		this.setText(text)
 	}
 }
 
 export class H3 extends Tag {
-	constructor (text, attrs={}) {
-		super('h3', attrs)
+	constructor (text, attrs={}, opts={}) {
+		opts = _setopts(opts, 'events', [])
+		super('h3', attrs, opts)
 		this.setText(text)
 	}
 }
 
 export class H4 extends Tag {
-	constructor (text, attrs={}) {
-		super('h4', attrs)
+	constructor (text, attrs={}, opts={}) {
+		opts = _setopts(opts, 'events', [])
+		super('h4', attrs, opts)
 		this.setText(text)
 	}
 }
 
 export class H5 extends Tag {
-	constructor (text, attrs={}) {
-		super('h5', attrs)
+	constructor (text, attrs={}, opts={}) {
+		opts = _setopts(opts, 'events', [])
+		super('h5', attrs, opts)
 		this.setText(text)
 	}
 }
 
 export class H6 extends Tag {
-	constructor (text, attrs={}) {
-		super('h6', attrs)
+	constructor (text, attrs={}, opts={}) {
+		opts = _setopts(opts, 'events', [])
+		super('h6', attrs, opts)
 		this.setText(text)
 	}
 }
 
 export class Label extends Tag {
-	constructor (text, attrs={}) {
-		super('label', attrs)
+	constructor (text, attrs={}, opts={}) {
+		opts = _setopts(opts, 'events', [])
+		super('label', attrs, opts)
 		this.setText(text)
 	}
 }
 
 export class Input extends Tag {
-	constructor (attrs={}) {
-		super('input', attrs)
+	constructor (attrs={}, opts={}) {
+		opts = _setopts(opts, 'events', ['input', 'keydown', 'keyup'])
+		super('input', attrs, opts)
 	}
 }
 
 export class Textarea extends Tag {
-	constructor (attrs={}) {
-		super('textarea', attrs)
+	constructor (attrs={}, opts={}) {
+		opts = _setopts(opts, 'events', ['input', 'keydown', 'keyup'])
+		super('textarea', attrs, opts)
 	}
 }
 
 export class Select extends Tag {
-	constructor (attrs={}) {
-		super('select', attrs)
+	constructor (attrs={}, opts={}) {
+		opts = _setopts(opts, 'events', [])
+		super('select', attrs, opts)
 	}
 }
 
 export class Section extends Tag {
-	constructor (attrs={}) {
-		super('section', attrs)
+	constructor (attrs={}, opts={}) {
+		opts = _setopts(opts, 'events', [])
+		super('section', attrs, opts)
 	}
 }
 
 export class Option extends Tag {
-	constructor (value, text, attrs={}) {
-		super('option', attrs)
+	constructor (value, text, attrs={}, opts={}) {
+		opts = _setopts(opts, 'events', [])
+		super('option', attrs, opts)
 		this.setValue(value)
 		this.setText(text)
 	}
 }
 
 export class Button extends Tag {
-	constructor (text, command=null, attrs={}) {
-		super('button', attrs)
+	constructor (text, command=null, attrs={}, opts={}) {
+		opts = _setopts(opts, 'events', ['click'])
+		super('button', attrs, opts)
 		this.setText(text)
 		this.command = command
 	}
@@ -662,50 +717,58 @@ export class Button extends Tag {
 }
 
 export class Img extends Tag {
-	constructor (attrs={}) {
-		super('img', attrs)
+	constructor (attrs={}, opts={}) {
+		opts = _setopts(opts, 'events', [])
+		super('img', attrs, opts)
 	}
 }
 
 export class P extends Tag {
-	constructor (attrs={}) {
-		super('p', attrs)
+	constructor (attrs={}, opts={}) {
+		opts = _setopts(opts, 'events', [])
+		super('p', attrs, opts)
 	}
 }
 
 export class S extends Tag {
-	constructor (attrs={}) {
-		super('s', attrs)
+	constructor (attrs={}, opts={}) {
+		opts = _setopts(opts, 'events', [])
+		super('s', attrs, opts)
 	}
 }
 
 export class Code extends Tag {
-	constructor (attrs={}) {
-		super('code', attrs)
+	constructor (attrs={}, opts={}) {
+		opts = _setopts(opts, 'events', [])
+		super('code', attrs, opts)
 	}
 }
 
 export class Pre extends Tag {
-	constructor (attrs={}) {
-		super('pre', attrs)
+	constructor (attrs={}, opts={}) {
+		opts = _setopts(opts, 'events', [])
+		super('pre', attrs, opts)
 	}
 }
 
 export class I extends Tag {
-	constructor (attrs={}) {
-		super('i', attrs)
+	constructor (attrs={}, opts={}) {
+		opts = _setopts(opts, 'events', [])
+		super('i', attrs, opts)
 	}
 }
 
 export class Strong extends Tag {
-	constructor (attrs={}) {
-		super('strong', attrs)
+	constructor (attrs={}, opts={}) {
+		opts = _setopts(opts, 'events', [])
+		super('strong', attrs, opts)
 	}
 }
 
 export class Canvas extends Tag {
-	constructor (attrs={}) {
-		super('canvas', attrs)
+	constructor (attrs={}, opts={}) {
+		opts = _setopts(opts, 'events', [])
+		super('canvas', attrs, opts)
 	}
 
 	getContext (name) {
@@ -713,9 +776,16 @@ export class Canvas extends Tag {
 	}
 }
 
+export class FilterInput extends Input {
+	constructor () {
+		super()
+	}
+}
+
 export class Divid extends Div {
 	constructor (mode, c1, c2) {
-		super()
+		super({}, { events: ['mousedown'] })
+
 		if (mode === 'horizontal') {
 			this.setClass('nue_paned-frame_divid nue_paned-frame_divid--horizontal')
 		} else {
@@ -731,13 +801,14 @@ export class Divid extends Div {
 }
 
 export class PanedFrame extends Div {
-	constructor (mode='horizontal', attrs={}) {
+	constructor (mode='horizontal', attrs={}, opts={}) {
 		if ('class' in attrs) {
 			attrs['class'] += ` nue_paned-frame nue_paned-frame--${mode}`
 		} else {
 			attrs['class'] = ` nue_paned-frame nue_paned-frame--${mode}`
 		}
-		super(attrs)
+		opts = _setopts(opts, 'events', ['mousemove', 'mouseup'])
+		super(attrs, opts)
 		this.mode = mode
 		this.isDragging = false
 		this.cs = [] // components
@@ -827,7 +898,7 @@ export class PanedFrame extends Div {
 }
 
 export class Root extends Component {
-	constructor (name='div', attrs={}) {
+	constructor (name='div', attrs={}, opts={}) {
 		super(name, attrs)
 		this.mountElem = null
 	}
