@@ -365,11 +365,22 @@ export class Component {
 		this.bindEvent('change', ev => { this.onChange(ev) })
 		this.bindEvent('mousedown', ev => { this.onMouseDown(ev) })
 		this.bindEvent('mouseup', ev => { this.onMouseUp(ev) })
+		this.bindEvent('mousemove', ev => { this.onMouseMove(ev) })
 		this.bindEvent('mouseenter', ev => { this.onMouseEnter(ev) })
 		this.bindEvent('contextmenu', ev => { this.onContextMenu(ev) })
+		this.bindEvent('pointermove', ev => { this.onPointerMove(ev) })
+		this.bindEvent('pointerdown', ev => { this.onPointerDown(ev) })
+		this.bindEvent('pointerup', ev => { this.onPointerUp(ev) })
+		this.bindEvent('pointercancel', ev => { this.onPointerCancel(ev) })
+		this.bindEvent('wheel', ev => { this.onWheel(ev) })
 		return this
 	}
 
+	onWheel (ev) {}
+	onPointerMove (ev) {}
+	onPointerDown (ev) {}
+	onPointerUp (ev) {}
+	onPointerCancel (ev) {}
 	onInput (ev) {}
 	onKeyup (ev) {}
 	onKeydown (ev) {}
@@ -378,6 +389,7 @@ export class Component {
 	onChange (ev) {}
 	onMouseDown (ev) {}
 	onMouseUp (ev) {}
+	onMouseMove (ev) {}
 	onMouseEnter (ev) {}
 	onContextMenu (ev) {}
 
@@ -413,7 +425,7 @@ export class Component {
 	}
 
 	setAttr (key, val) {
-		console.log(`key[${key}] val[${val}]`)
+		// console.log(`key[${key}] val[${val}]`)
 		key = this.convAttrKey(key)
 		this.elem.setAttribute(key, val)
 		return this
@@ -468,9 +480,21 @@ export class Component {
 		this.elem.setAttribute('class', val)
 	}
 
+	getText () {
+		return this.elem.textContent
+	}
+
 	setText (text) {
 		this.elem.textContent = text
 		return this
+	}
+
+	addText (text) {
+		this.elem.textContent += text
+	}
+
+	getValue () {
+		return this.elem.value
 	}
 
 	setValue (value) {
@@ -682,6 +706,123 @@ export class Strong extends Tag {
 export class Canvas extends Tag {
 	constructor (attrs={}) {
 		super('canvas', attrs)
+	}
+
+	getContext (name) {
+		return this.elem.getContext(name)
+	}
+}
+
+export class Divid extends Div {
+	constructor (mode, c1, c2) {
+		super()
+		if (mode === 'horizontal') {
+			this.setClass('paned-frame_divid paned-frame_divid--horizontal')
+		} else {
+			this.setClass('paned-frame_divid paned-frame_divid--vertical')			
+		}
+		this.cs = [c1, c2]
+	}
+
+	onMouseDown (ev) {
+		ev.cs = this.cs
+		this.emit('mouseDown', ev)
+	}
+}
+
+export class PanedFrame extends Div {
+	constructor (mode='horizontal', attrs={}) {
+		if ('class' in attrs) {
+			attrs['class'] += ' paned-frame'
+		} else {
+			attrs['class'] = ' paned-frame'
+		}
+		super(attrs)
+		this.mode = mode
+		this.isDragging = false
+		this.cs = [] // components
+		this.dragX = 0
+		this.dragY = 0
+	}
+
+	// 0   1   2   3   4
+	// c | d | c | d | c
+	// 0 -> 0
+	// 1 -> 2
+	// 2 -> 4
+	setWidth (index, w) {
+		index *= 2
+		let s = this.children[index].parseStyle()
+		s['width'] = w
+		this.children[index].setCSS(s)
+	}
+
+	setHeight (index, h) {
+		index *= 2
+		let s = this.children[index].parseStyle()
+		s['height'] = h
+		this.children[index].setCSS(s)
+	}
+
+	add (c) {
+		if (this.children.length >= 1) {
+			let c1 = this.children[this.children.length-1]
+			let c2 = c
+			super.add(new Divid(this.mode, c1, c2))
+		}
+		super.add(c)
+	}
+
+	aaa (c, ev, evkey, style, key, d) {
+		let m = /([0-9\.]+)(px|em|rem|\%)/.exec(style[key])
+
+		if (m) {
+			let n = parseFloat(m[1])
+			n += ev[evkey] * d
+			n = Math.min(n, 100)
+			n = Math.max(n, 0)
+			style[key] = n + m[2]
+			c.setCSS(style)
+		}
+
+		return style
+	}
+
+	onMouseMove (ev) {
+		if (!this.isDragging) {
+			return
+		}
+
+		let s1 = this.cs[0].parseStyle()
+		let s2 = this.cs[1].parseStyle()
+		let w, h
+
+		switch (this.mode) {
+		case 'horizontal':
+			this.aaa(this.cs[0], ev, 'movementX', s1, 'width', 0.05)
+			this.aaa(this.cs[1], ev, 'movementX', s2, 'width', -0.05)
+			break
+		case 'vertical':
+			this.aaa(this.cs[0], ev, 'movementY', s1, 'height', 0.05)
+			this.aaa(this.cs[1], ev, 'movementY', s2, 'height', -0.05)
+			break
+		}
+
+		this.emit('dragPanedFrame', ev)
+	}
+
+	onMouseUp (ev) {
+		this.isDragging = false
+	}
+
+	receive (name, ev) {
+		switch (name) {
+		default: this.emit(name, ev); break
+		case 'mouseDown': 
+			this.isDragging = true
+			this.cs = ev.cs
+			break
+		}
 	}
 }
 
