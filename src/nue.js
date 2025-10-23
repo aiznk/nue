@@ -717,9 +717,9 @@ export class Divid extends Div {
 	constructor (mode, c1, c2) {
 		super()
 		if (mode === 'horizontal') {
-			this.setClass('paned-frame_divid paned-frame_divid--horizontal')
+			this.setClass('nue_paned-frame_divid nue_paned-frame_divid--horizontal')
 		} else {
-			this.setClass('paned-frame_divid paned-frame_divid--vertical')			
+			this.setClass('nue_paned-frame_divid nue_paned-frame_divid--vertical')			
 		}
 		this.cs = [c1, c2]
 	}
@@ -733,9 +733,9 @@ export class Divid extends Div {
 export class PanedFrame extends Div {
 	constructor (mode='horizontal', attrs={}) {
 		if ('class' in attrs) {
-			attrs['class'] += ' paned-frame'
+			attrs['class'] += ` nue_paned-frame nue_paned-frame--${mode}`
 		} else {
-			attrs['class'] = ' paned-frame'
+			attrs['class'] = ` nue_paned-frame nue_paned-frame--${mode}`
 		}
 		super(attrs)
 		this.mode = mode
@@ -773,7 +773,7 @@ export class PanedFrame extends Div {
 		super.add(c)
 	}
 
-	aaa (c, ev, evkey, style, key, d) {
+	fixCompoStyle (c, ev, evkey, style, key, d) {
 		let m = /([0-9\.]+)(px|em|rem|\%)/.exec(style[key])
 
 		if (m) {
@@ -799,12 +799,12 @@ export class PanedFrame extends Div {
 
 		switch (this.mode) {
 		case 'horizontal':
-			this.aaa(this.cs[0], ev, 'movementX', s1, 'width', 0.05)
-			this.aaa(this.cs[1], ev, 'movementX', s2, 'width', -0.05)
+			this.fixCompoStyle(this.cs[0], ev, 'movementX', s1, 'width', 0.05)
+			this.fixCompoStyle(this.cs[1], ev, 'movementX', s2, 'width', -0.05)
 			break
 		case 'vertical':
-			this.aaa(this.cs[0], ev, 'movementY', s1, 'height', 0.05)
-			this.aaa(this.cs[1], ev, 'movementY', s2, 'height', -0.05)
+			this.fixCompoStyle(this.cs[0], ev, 'movementY', s1, 'height', 0.05)
+			this.fixCompoStyle(this.cs[1], ev, 'movementY', s2, 'height', -0.05)
 			break
 		}
 

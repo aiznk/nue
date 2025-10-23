@@ -3,7 +3,7 @@
 A light weight JavaScript framework for Single Page Application.
 
 ```js
-import * as nue from "../src/main.js"
+import * as nue from "../src/nue.js"
 
 class Root extends nue.Root {
 	constructor () {

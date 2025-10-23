@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Paned Frame</title>
+	<link rel="stylesheet" href="../src/nue.css">
+	<style>
+		* {
+			box-sizing: border-box;
+			user-select: none;
+		}
+		html, body {
+			height: 100%;
+			margin: 0;
+		}
+		body {
+			padding: 1rem;
+		}
+		#app {
+			height: 100%;
+		}
+		.root {
+			border: 2px solid #333;
+			height: 100%;
+		}
+		.nue_paned-frame {
+			height: 100%;
+		}
+		.nue_paned-frame_divid {
+			background: green;
+		}
+		.left {
+			padding: 1rem;
+			background: #eee;
+		}
+		.top {
+			padding: 1rem;
+		}
+		.three-c {
+			padding: 1rem;
+			background: #ddd;
+		}
+	</style>
+	<script type="module">
+		import * as nue from "../src/nue.js"
+
+		class Three extends nue.PanedFrame {
+			constructor () {
+				super('horizontal', { class: 'three' })
+				this.c1 = new nue.Div({ class: 'three-c' })
+				this.c2 = new nue.Div({ class: 'three-c' })
+				this.c3 = new nue.Div({ class: 'three-c' })
+				this.c1.setText('c1')
+				this.c2.setText('c2')
+				this.c3.setText('c3')
+				this.add(this.c1)
+				this.add(this.c2)
+				this.add(this.c3)
+				this.setWidth(0, '33%')
+				this.setWidth(1, '33%')
+				this.setWidth(2, '34%')
+			}
+		}
+
+		class Root extends nue.Root {
+			constructor () {
+				super('div', { class: 'root' })
+				
+				this.hpaned = new nue.PanedFrame('horizontal')
+				this.add(this.hpaned)
+
+				this.left = new nue.Div({ class: 'left' })
+				this.left.setText('left')
+				this.hpaned.add(this.left)
+
+				this.right = new nue.PanedFrame('vertical', { class: 'right' })
+				this.hpaned.add(this.right)
+
+				this.hpaned.setWidth(0, '40%')
+				this.hpaned.setWidth(1, '60%')
+
+				this.top = new nue.Div({ class: 'top' })
+				this.top.setText('top')
+				this.right.add(this.top)
+
+				this.bottom = new nue.Div({ class: 'bottom' })
+				this.right.add(this.bottom)
+
+				this.right.setHeight(0, '30%')
+				this.right.setHeight(1, '70%')
+
+				this.three = new Three()
+				this.bottom.add(this.three)
+			}
+		}
+
+		document.addEventListener('DOMContentLoaded', () => {
+			let root = new Root()
+			root.mount('#app')
+		})
+	</script>
+</head>
+<body>
+	<div id="app"></div>
+</body>
+</html>
