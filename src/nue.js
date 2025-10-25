@@ -865,7 +865,7 @@ export class FilterList extends Ul {
 		this.saveItems = []
 	}
 
-	save () {
+	saveState () {
 		this.saveItems = Object.assign([], this.children)
 	}
 
