@@ -322,6 +322,10 @@ export class Component {
 		this._bindEvents()
 	}
 
+	len () {
+		return this.children.length
+	}
+
 	setChildren (items) {
 		this.clear()
 		for (let item of items) {
@@ -511,9 +515,17 @@ export class Component {
 		this.elem.setAttribute('class', val)
 	}
 
+	removeClass (val) {
+		let cls = this.elem.className.split(' ')
+		cls = cls.filter(el => el !== val)
+		this.elem.className = cls.join(' ')
+	}
+
 	addClass (val) {
 		let cls = this.elem.className.split(' ')
-		cls.push(val)
+		if (!cls.includes(val)) {
+			cls.push(val)
+		}
 		this.elem.className = cls.join(' ')
 	}
 
@@ -522,6 +534,7 @@ export class Component {
 	}
 
 	setText (text) {
+		// set textContent and *clear child nodes*
 		this.elem.textContent = text
 		return this
 	}
@@ -537,6 +550,12 @@ export class Component {
 	setValue (value) {
 		this.elem.value = value
 		return this
+	}
+
+	unshift (child) {
+		child.parent = this
+		this.children.unshift(child)
+		this.elem.prepend(child.elem)
 	}
 
 	add (child) {
@@ -785,6 +804,41 @@ export class Canvas extends Tag {
 	}
 }
 
+export class Table extends Tag {
+	constructor (attrs={}, opts={}) {
+		opts = _setopts(opts, 'events', [])
+		super('table', attrs, opts)
+	}
+}
+
+export class THead extends Tag {
+	constructor (attrs={}, opts={}) {
+		opts = _setopts(opts, 'events', [])
+		super('thead', attrs, opts)
+	}
+}
+
+export class TBody extends Tag {
+	constructor (attrs={}, opts={}) {
+		opts = _setopts(opts, 'events', [])
+		super('thead', attrs, opts)
+	}
+}
+
+export class Tr extends Tag {
+	constructor (attrs={}, opts={}) {
+		opts = _setopts(opts, 'events', [])
+		super('tr', attrs, opts)
+	}
+}
+
+export class Td extends Tag {
+	constructor (attrs={}, opts={}) {
+		opts = _setopts(opts, 'events', [])
+		super('td', attrs, opts)
+	}
+}
+
 function _addattr (o, key, val) {
 	if (!(key in o)) {
 		o[key] = val
@@ -941,6 +995,179 @@ export class FilterList extends Ul {
 		}
 
 		this.setChildren(match)
+	}
+}
+
+class Vector2i {
+	constructor (x=0, y=0) {
+		this.x = x
+		this.y = y
+	}
+}
+
+export class HonestInput extends Input {
+	constructor (attrs={}, opts={}) {
+		super(attrs, opts)
+		this.addClass('nue_honest-input')
+	}
+
+	onKeydown (ev) {
+		this.emit('honestInputKeydown', ev)
+	}
+}
+
+export class HonestTableCell extends Td {
+	constructor (attrs={}, opts={}) {
+		_setopts(opts, 'events', ['click', 'dblclick'])
+		super(attrs, opts)
+		this.addClass('nue_honest-table-cell')
+		this.pos = new Vector2i()
+		this.mode = 'normal'
+		this.input = null
+		this.oldText = ''
+	}
+
+	receive (name, ev) {
+		switch (name) {
+		case 'honestInputKeydown':
+			if (ev.code === 'Escape') {
+				this.toNormalMode({ undo: true })
+			} else if (ev.code === 'Enter') {
+				this.toNormalMode()
+				this.emit('honestTableCellSetValue', this.getText())
+			}
+			break
+		}
+	}
+
+	onClick (ev) {
+		ev.cell = this
+		this.emit('honestTableCellClick', ev)
+	}
+
+	onDblClick (ev) {
+		ev.cell = this
+		this.emit('honestTableCellDblClick', ev)
+	}
+
+	toNormalMode ({
+		undo=false,
+	}={}) {
+		this.mode = 'normal'
+		if (this.input) {
+			this.clear()
+			if (undo) {
+				this.setText(this.oldText)
+			} else {
+				let value = this.input.getValue()
+				this.setText(value)
+			}
+			this.input = null
+		}
+	}
+
+	toEditMode () {
+		this.mode = 'edit'
+		if (this.input) {
+			this.toNormalMode()
+		}
+		this.oldText = this.getText()
+		this.setText('')
+		this.input = new HonestInput()
+		this.input.setValue(this.oldText)
+		this.add(this.input)
+		this.input.elem.focus()
+	}
+}
+
+export class HonestTableHeadCell extends Td {
+	constructor (attrs={}, opts={}) {
+		super(attrs, opts)
+	}
+}
+
+export class HonestTableRowCell extends Td {
+	constructor (attrs={}, opts={}) {
+		super(attrs, opts)
+	}
+}
+
+export class HonestTableRow extends Tr {
+	constructor (attrs={}, opts={}) {
+		super(attrs, opts)
+		this.addClass('nue_honest-table-row')
+		this.pos = new Vector2i()
+	}
+}
+
+export class HonestTable extends Table {
+	constructor (attrs={}, opts={}) {
+		_setopts(opts, 'events')
+		super(attrs, opts)
+		this.matrix = []	
+		this.thead = new THead()
+		this.add(this.thead)
+		this.tbody = new TBody()
+		this.add(this.tbody)
+		this.editingCell = null
+		this.selectCell = null
+	}
+
+	genHeadRow (n) {
+		let row = new HonestTableRow()
+		row.add(new HonestTableHeadCell())
+
+		for (let i = 0; i < n; i++) {
+			i %= 26
+			let c = String.fromCharCode(65+i)
+			let cell = new HonestTableHeadCell()
+			cell.setText(c)
+			row.add(cell)
+		}
+		return row
+	}
+
+	receive (name, ev) {
+		switch (name) {
+		case 'honestTableCellClick':
+			if (this.selectCell) {
+				this.selectCell.removeClass('nue_honest-table-cell--select')
+			}
+			this.selectCell = ev.cell
+			this.selectCell.addClass('nue_honest-table-cell--select')
+			break
+		case 'honestTableCellDblClick':
+			if (this.editingCell) {
+				this.editingCell.toNormalMode()
+			}
+			this.editingCell = ev.cell
+			this.editingCell.toEditMode()
+			break
+		}
+	}
+
+	addRow (row) {
+		let hrow = this.genHeadRow(row.len())
+		this.thead.clear()
+		this.thead.add(hrow)
+
+		let r = []
+		let h = this.matrix.length
+		for (let x = 0; x < row.children.length; x++) {
+			let cell = row.children[x]
+			cell.pos.x = x
+			cell.pos.y = h
+			cell.addClass(`nue_honest-table-cell_pos-x-${x}`)
+			cell.addClass(`nue_honest-table-cell_pos-y-${h}`)
+			r.push(cell)
+		}
+		this.matrix.push(r)
+		let rcell = new HonestTableRowCell()
+		rcell.setText(h+1)
+		row.unshift(rcell)
+		row.pos.y = h
+		row.addClass(`nue_honest-table-row_pos-y-${h}`)
+		this.tbody.add(row)
 	}
 }
 

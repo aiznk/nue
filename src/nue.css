@@ -17,3 +17,14 @@
 .nue_paned-frame_divid--vertical {
 	height: 2px;
 }
+
+.nue_honest-table-cell--select {
+	border: 1px solid red;
+}
+.nue_honest-input {
+	border: 0;
+	font-size: 1rem;
+}
+.nue_honest-input:focus {
+	outline: 0;
+}
