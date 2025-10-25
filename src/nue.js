@@ -387,16 +387,12 @@ export class Component {
 		const events = _oget(this.opts, 'events', null)
 		if (events == null) {
 			for (let key in map) {
-				this.elem.addEventListener(key, map[key], {
-					passive: true,
-				})
+				this.elem.addEventListener(key, map[key])
 			}			
 		} else if (Array.isArray(events)) {
 			for (let key in map) {
 				if (events.includes(key)) {
-					this.elem.addEventListener(key, map[key], {
-						passive: true,
-					})
+					this.elem.addEventListener(key, map[key])
 				}
 			}
 		}
@@ -506,6 +502,12 @@ export class Component {
 
 	setClass (val) {
 		this.elem.setAttribute('class', val)
+	}
+
+	addClass (val) {
+		let cls = this.elem.className.split(' ')
+		cls.push(val)
+		this.elem.className = cls.join(' ')
 	}
 
 	getText () {
@@ -776,9 +778,169 @@ export class Canvas extends Tag {
 	}
 }
 
-export class FilterInput extends Input {
-	constructor () {
-		super()
+function _addattr (o, key, val) {
+	if (!(key in o)) {
+		o[key] = val
+	} else {
+		o[key] += val
+	}
+}
+
+class FilterEntryInput extends Input {
+	constructor (attrs={}, opts={}) {
+		super(attrs, opts)
+		this.addClass('nue_filter-entry-input')
+	}
+
+	onKeydown (ev) {
+		if (ev.code === 'Enter') {
+			this.emit('filterEntryExec', ev)
+		}
+	}
+}
+
+export class FilterEntry extends Div {
+	constructor ({
+		options=[
+			['AND', 'AND'],
+			['OR', 'OR'],
+			['NOT', 'NOT'],
+		],
+		undoBtnText='Undo',
+	}={}, attrs={}, opts={}) {
+		super(attrs, opts)
+		this.addClass('nue_filter-entry')
+
+		this.select = new Select()
+		this.add(this.select)
+
+		for (let row of options) {
+			this.select.add(new Option(row[0], row[1]))
+		}
+
+		this.input = new FilterEntryInput()
+		this.add(this.input)
+
+		this.undoBtn = new Button(undoBtnText, function (ev) {
+			this.emit('filterEntryUndo', ev)
+		})
+		this.add(this.undoBtn)
+	}
+
+	receive (name, ev) {
+		switch (name) {
+		case 'filterEntryExec':
+			ev.selectValue = this.select.getValue()
+			ev.filterValue = this.input.getValue()
+			this.emit(name, ev)
+			break
+		case 'filterEntryUndo':
+			this.emit(name, ev)
+			break
+		}
+	}
+}
+
+export class FilterListItem extends Li {
+	constructor (index, text, attrs={}, opts={}) {
+		super(attrs, opts)
+		this.addClass('nue_filter-list-item')
+		this.text = text
+		this.index = index
+		this.setText(text)
+	}
+}
+
+export class FilterList extends Ul {
+	constructor (attrs={}, opts={}) {
+		super(attrs, opts)
+		this.addClass('nue_filter-list')
+		this.saveItems = []
+	}
+
+	save () {
+		this.saveItems = Object.assign([], this.children)
+	}
+
+	undo () {
+		this.resetChildren(this.saveItems)
+	}
+
+	resetChildren (items) {
+		this.clear()
+		for (let item of items) {
+			this.add(item)
+		}
+	}
+
+	filter (selectValue, filterValue) {
+		switch (selectValue) {
+		case 'AND': this.filterAnd(filterValue); break
+		case 'OR': this.filterOr(filterValue); break
+		case 'NOT': this.filterNot(filterValue); break
+		}
+	}
+
+	filterAnd (val) {
+		let toks = val.replace('　', ' ').split(' ')
+		let match = []
+
+		for (let item of this.saveItems) {
+			let text = item.getText()
+			let n = 0
+			for (let tok of toks) {
+				if (text.includes(tok)) {
+					n++
+				}
+			}
+			if (n === toks.length) {
+				match.push(item)
+			}
+		}
+
+		this.resetChildren(match)
+	}
+
+	filterOr (val) {
+		let toks = val.replace('　', ' ').split(' ')
+		let match = []
+
+		for (let item of this.saveItems) {
+			let text = item.getText()
+			let n = 0
+			for (let tok of toks) {
+				if (text.includes(tok)) {
+					n++
+					break
+				}
+			}
+			if (n) {
+				match.push(item)
+			}
+		}
+
+		this.resetChildren(match)
+	}
+
+	filterNot (val) {
+		let toks = val.replace('　', ' ').split(' ')
+		let match = []
+
+		for (let item of this.saveItems) {
+			let text = item.getText()
+			let n = 0
+			for (let tok of toks) {
+				if (text.includes(tok)) {
+					n++
+					break
+				}
+			}
+			if (!n) {
+				match.push(item)
+			}
+		}
+
+		this.resetChildren(match)
 	}
 }
 
@@ -849,9 +1011,15 @@ export class PanedFrame extends Div {
 
 		if (m) {
 			let n = parseFloat(m[1])
+			let t = m[2]
+			if (t === 'px') {
+				d *= 20
+			}
 			n += ev[evkey] * d
-			n = Math.min(n, 100)
-			n = Math.max(n, 0)
+			if (t === '%') {
+				n = Math.min(n, 100)
+				n = Math.max(n, 0)
+			}
 			style[key] = n + m[2]
 			c.setCSS(style)
 		}
