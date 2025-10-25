@@ -322,6 +322,13 @@ export class Component {
 		this._bindEvents()
 	}
 
+	setChildren (items) {
+		this.clear()
+		for (let item of items) {
+			this.add(item)
+		}
+	}
+
 	template (code, {
 		components={}
 	}={}) {
@@ -831,7 +838,7 @@ export class FilterEntry extends Div {
 		switch (name) {
 		case 'filterEntryExec':
 			ev.selectValue = this.select.getValue()
-			ev.filterValue = this.input.getValue()
+			ev.inputValue = this.input.getValue()
 			this.emit(name, ev)
 			break
 		case 'filterEntryUndo':
@@ -863,14 +870,7 @@ export class FilterList extends Ul {
 	}
 
 	undo () {
-		this.resetChildren(this.saveItems)
-	}
-
-	resetChildren (items) {
-		this.clear()
-		for (let item of items) {
-			this.add(item)
-		}
+		this.setChildren(this.saveItems)
 	}
 
 	filter (selectValue, filterValue) {
@@ -898,7 +898,7 @@ export class FilterList extends Ul {
 			}
 		}
 
-		this.resetChildren(match)
+		this.setChildren(match)
 	}
 
 	filterOr (val) {
@@ -919,7 +919,7 @@ export class FilterList extends Ul {
 			}
 		}
 
-		this.resetChildren(match)
+		this.setChildren(match)
 	}
 
 	filterNot (val) {
@@ -940,7 +940,7 @@ export class FilterList extends Ul {
 			}
 		}
 
-		this.resetChildren(match)
+		this.setChildren(match)
 	}
 }
 

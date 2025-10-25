@@ -25,7 +25,7 @@
 			receive (name, ev) {
 				switch (name) {
 				case 'filterEntryExec':
-					this.list.filter(ev.selectValue, ev.filterValue)
+					this.list.filter(ev.selectValue, ev.inputValue)
 					break
 				case 'filterEntryUndo':
 					this.list.undo()
