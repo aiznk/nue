@@ -322,6 +322,26 @@ export class Component {
 		this._bindEvents()
 	}
 
+	insertTextToCaretPos(text) {
+		const start = this.elem.selectionStart;
+		const end = this.elem.selectionEnd;
+		const value = this.elem.value;
+		this.elem.value = value.slice(0, start) + text + value.slice(end);
+		this.elem.selectionStart = this.elem.selectionEnd = start + text.length;
+		this.elem.focus();
+	}
+
+	scrollToBottom ({ caret=null }={}) {
+		this.elem.scrollTop = this.elem.scrollHeight
+
+		switch (caret) {
+		case 'focusBottom':
+			this.elem.focus()
+			this.elem.setSelectionRange(this.elem.value.length, this.elem.value.length)
+			break
+		}
+	}
+
 	len () {
 		return this.children.length
 	}
@@ -388,6 +408,7 @@ export class Component {
 			'mouseup': this.onMouseUp.bind(this),
 			'mousemove': this.onMouseMove.bind(this),
 			'mouseenter': this.onMouseEnter.bind(this),
+			'mouseleave': this.onMouseLeave.bind(this),
 			'contextmenu': this.onContextMenu.bind(this),
 			'pointermove': this.onPointerMove.bind(this),
 			'pointerdown': this.onPointerDown.bind(this),
@@ -426,6 +447,7 @@ export class Component {
 	onMouseUp (ev) {}
 	onMouseMove (ev) {}
 	onMouseEnter (ev) {}
+	onMouseLeave (ev) {}
 	onContextMenu (ev) {}
 
 	emit (name, value) {
