@@ -861,6 +861,18 @@ export class Td extends Tag {
 	}
 }
 
+export class Colgroup extends Tag {
+	constructor (attrs={}, opts={}) {
+		super('colgroup', attrs, opts)
+	}
+}
+
+export class Col extends Tag {
+	constructor (attrs={}, opts={}) {
+		super('col', attrs, opts)
+	}
+}
+
 function _addattr (o, key, val) {
 	if (!(key in o)) {
 		o[key] = val
@@ -1102,9 +1114,47 @@ export class HonestTableCell extends Td {
 	}
 }
 
+class HonestHeadCellBar extends Span {
+	constructor (cell) {
+		super({
+			class: 'nue_honest-head-cell-bar',
+		}, {
+			events: ['mousedown', 'mouseup', 'mousemove'],
+		})
+		this.cell = cell
+	}
+
+	onMouseDown (ev) {
+		ev.bar = this
+		this.emit('honestCellBarMouseDown', ev)
+	}
+
+	onMouseUp (ev) {
+		ev.bar = this
+		this.emit('honestCellBarMouseUp', ev)
+	}
+
+	onMouseMove (ev) {
+		ev.bar = this
+		this.emit('honestCellBarMouseMove', ev)
+	}
+}
+
 export class HonestTableHeadCell extends Td {
-	constructor (attrs={}, opts={}) {
+	constructor (index, attrs={}, opts={}) {
 		super(attrs, opts)
+		this.index = index
+		this.data = new Span()
+		this.add(this.data)
+		this.bar = new HonestHeadCellBar(this)
+		if (index) {
+			this.bar.addClass('nue_honest-head-cell-bar--grabbable')
+		}
+		this.add(this.bar)
+	}
+
+	setText (text) {
+		this.data.setText(text)
 	}
 }
 
@@ -1125,8 +1175,13 @@ export class HonestTableRow extends Tr {
 export class HonestTable extends Table {
 	constructor (attrs={}, opts={}) {
 		_setopts(opts, 'events')
+		attrs = Object.assign(attrs, {
+			class: 'nue_honest-table',
+		})
 		super(attrs, opts)
 		this.matrix = []	
+		this.colgroup = new Colgroup()
+		this.add(this.colgroup)
 		this.thead = new THead()
 		this.add(this.thead)
 		this.tbody = new TBody()
@@ -1137,12 +1192,12 @@ export class HonestTable extends Table {
 
 	genHeadRow (n) {
 		let row = new HonestTableRow()
-		row.add(new HonestTableHeadCell())
+		row.add(new HonestTableHeadCell(0))
 
 		for (let i = 0; i < n; i++) {
 			i %= 26
 			let c = String.fromCharCode(65+i)
-			let cell = new HonestTableHeadCell()
+			let cell = new HonestTableHeadCell(i+1)
 			cell.setText(c)
 			row.add(cell)
 		}
@@ -1151,6 +1206,17 @@ export class HonestTable extends Table {
 
 	receive (name, ev) {
 		switch (name) {
+		case 'honestCellBarMouseDown': {
+			let cell = ev.bar.cell
+			let x = cell.index
+			this.thead.children[x]
+		} break
+		case 'honestCellBarMouseUp': {
+			
+		} break
+		case 'honestCellBarMouseMove': {
+			
+		} break
 		case 'honestTableCellClick':
 			if (this.selectCell) {
 				this.selectCell.removeClass('nue_honest-table-cell--select')
@@ -1172,6 +1238,11 @@ export class HonestTable extends Table {
 		let hrow = this.genHeadRow(row.len())
 		this.thead.clear()
 		this.thead.add(hrow)
+
+		this.colgroup.clear()
+		for (let i = 0; i < hrow.len(); i++) {
+			this.colgroup.add(new Col())
+		}
 
 		let r = []
 		let h = this.matrix.length
