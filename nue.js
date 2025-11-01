@@ -415,6 +415,7 @@ export class Component {
 			'pointerup': this.onPointerUp.bind(this),
 			'pointercancel': this.onPointerCancel.bind(this),
 			'wheel': this.onWheel.bind(this),
+			'scroll': this.onScroll.bind(this),
 		}
 		const events = _oget(this.opts, 'events', null)
 		if (events == null) {
@@ -432,6 +433,7 @@ export class Component {
 		return this
 	}
 
+	onScroll (ev) {}
 	onWheel (ev) {}
 	onPointerMove (ev) {}
 	onPointerDown (ev) {}
@@ -723,14 +725,14 @@ export class Input extends Tag {
 
 export class Textarea extends Tag {
 	constructor (attrs={}, opts={}) {
-		opts = _setopts(opts, 'events', ['input', 'keydown', 'keyup'])
+		opts = _setopts(opts, 'events', ['input', 'keydown', 'keyup', 'scroll'])
 		super('textarea', attrs, opts)
 	}
 }
 
 export class Select extends Tag {
 	constructor (attrs={}, opts={}) {
-		opts = _setopts(opts, 'events', [])
+		opts = _setopts(opts, 'events', ['change'])
 		super('select', attrs, opts)
 	}
 }
