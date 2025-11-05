@@ -433,35 +433,35 @@ export class Component {
 		return this
 	}
 
-	onScroll (ev) {}
-	onWheel (ev) {}
-	onPointerMove (ev) {}
-	onPointerDown (ev) {}
-	onPointerUp (ev) {}
-	onPointerCancel (ev) {}
-	onInput (ev) {}
-	onKeyup (ev) {}
-	onKeydown (ev) {}
-	onClick (ev) {}
-	onDblClick (ev) {}
-	onChange (ev) {}
-	onMouseDown (ev) {}
-	onMouseUp (ev) {}
-	onMouseMove (ev) {}
-	onMouseEnter (ev) {}
-	onMouseLeave (ev) {}
-	onContextMenu (ev) {}
+	async onScroll (ev) {}
+	async onWheel (ev) {}
+	async onPointerMove (ev) {}
+	async onPointerDown (ev) {}
+	async onPointerUp (ev) {}
+	async onPointerCancel (ev) {}
+	async onInput (ev) {}
+	async onKeyup (ev) {}
+	async onKeydown (ev) {}
+	async onClick (ev) {}
+	async onDblClick (ev) {}
+	async onChange (ev) {}
+	async onMouseDown (ev) {}
+	async onMouseUp (ev) {}
+	async onMouseMove (ev) {}
+	async onMouseEnter (ev) {}
+	async onMouseLeave (ev) {}
+	async onContextMenu (ev) {}
 
-	emit (name, value) {
+	async emit (name, value) {
 		if (this.parent) {
-			this.parent.receive(name, value)
+			await this.parent.receive(name, value)
 		}
 		return this
 	}
 
-	receive (name, value) {
+	async receive (name, value) {
 		if (this.parent) {
-			this.parent.receive(name, value)
+			await this.parent.receive(name, value)
 		}
 		return this
 	}
