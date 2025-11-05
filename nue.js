@@ -1063,27 +1063,28 @@ export class HonestTableCell extends Td {
 		this.oldText = ''
 	}
 
-	receive (name, ev) {
+	async receive (name, ev) {
 		switch (name) {
 		case 'honestInputKeydown':
 			if (ev.code === 'Escape') {
 				this.toNormalMode({ undo: true })
+				await this.emit('honestInputKeydown', ev)
 			} else if (ev.code === 'Enter') {
 				this.toNormalMode()
-				this.emit('honestTableCellSetValue', this.getText())
+				await this.emit('honestTableCellSetValue', this.getText())
 			}
 			break
 		}
 	}
 
-	onClick (ev) {
+	async onClick (ev) {
 		ev.cell = this
-		this.emit('honestTableCellClick', ev)
+		await this.emit('honestTableCellClick', ev)
 	}
 
-	onDblClick (ev) {
+	async onDblClick (ev) {
 		ev.cell = this
-		this.emit('honestTableCellDblClick', ev)
+		await this.emit('honestTableCellDblClick', ev)
 	}
 
 	toNormalMode ({
@@ -1126,19 +1127,19 @@ class HonestHeadCellBar extends Span {
 		this.cell = cell
 	}
 
-	onMouseDown (ev) {
+	async onMouseDown (ev) {
 		ev.bar = this
-		this.emit('honestCellBarMouseDown', ev)
+		await this.emit('honestCellBarMouseDown', ev)
 	}
 
-	onMouseUp (ev) {
+	async onMouseUp (ev) {
 		ev.bar = this
-		this.emit('honestCellBarMouseUp', ev)
+		await this.emit('honestCellBarMouseUp', ev)
 	}
 
-	onMouseMove (ev) {
+	async onMouseMove (ev) {
 		ev.bar = this
-		this.emit('honestCellBarMouseMove', ev)
+		await this.emit('honestCellBarMouseMove', ev)
 	}
 }
 
@@ -1146,13 +1147,18 @@ export class HonestTableHeadCell extends Td {
 	constructor (index, attrs={}, opts={}) {
 		super(attrs, opts)
 		this.index = index
+		
+		this.box = new Div()
+		this.add(this.box)
+
 		this.data = new Span()
-		this.add(this.data)
+		this.box.add(this.data)
+
 		this.bar = new HonestHeadCellBar(this)
 		if (index) {
 			this.bar.addClass('nue_honest-head-cell-bar--grabbable')
 		}
-		this.add(this.bar)
+		this.box.add(this.bar)
 	}
 
 	setText (text) {
@@ -1176,7 +1182,7 @@ export class HonestTableRow extends Tr {
 
 export class HonestTable extends Table {
 	constructor (attrs={}, opts={}) {
-		_setopts(opts, 'events')
+		_setopts(opts, 'events', ['mouseleave', 'mousemove', 'mouseup'])
 		attrs = Object.assign(attrs, {
 			class: 'nue_honest-table',
 		})
@@ -1190,6 +1196,35 @@ export class HonestTable extends Table {
 		this.add(this.tbody)
 		this.editingCell = null
 		this.selectCell = null
+		this.grabCol = null
+		this.isGravCol = false
+	}
+
+	onMouseLeave (ev) {
+		this.isGrabCol = false
+	}
+
+	onMouseUp (ev) {
+		this.grabCol = null
+		this.isGrabCol = false	
+	}
+
+	onMouseMove (ev) {
+		if (this.isGrabCol) {
+			let r = this.grabCol.elem.getBoundingClientRect()
+			let s = this.grabCol.parseStyle()
+			let m = /(.+)px/.exec(s['width'])
+			let w 
+			if (m) {
+				w = r.width
+			} else {
+				w = 50
+			}
+			w += ev.movementX
+			w = Math.max(0, w)
+			console.log(w)
+			this.grabCol.setCSS({ width: w + 'px' })
+		}
 	}
 
 	genHeadRow (n) {
@@ -1207,21 +1242,28 @@ export class HonestTable extends Table {
 	}
 
 	receive (name, ev) {
+		// console.log(name, ev)
 		switch (name) {
+		case 'honestInputKeydown':
+			if (ev.code === 'Escape') {
+			}
+			break
 		case 'honestCellBarMouseDown': {
 			let cell = ev.bar.cell
 			let x = cell.index
-			this.thead.children[x]
+			let col = this.colgroup.children[x]
+			this.grabCol = col
+			this.isGrabCol = true
+			console.log(this.grabCol)
 		} break
 		case 'honestCellBarMouseUp': {
-			
 		} break
 		case 'honestCellBarMouseMove': {
-			
 		} break
 		case 'honestTableCellClick':
 			if (this.selectCell) {
 				this.selectCell.removeClass('nue_honest-table-cell--select')
+				this.selectCell.toNormalMode()
 			}
 			this.selectCell = ev.cell
 			this.selectCell.addClass('nue_honest-table-cell--select')

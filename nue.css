@@ -23,7 +23,12 @@
 }
 .nue_honest-table thead {
 }
-.nue_honest-table thead tr {
+.nue_honest-table thead tr td div {
+	display: flex;
+	flex-direction: row;
+}
+.nue_honest-table thead tr td div span:first-child {
+	flex: 1;
 }
 .nue_honest-table thead td {
 }
