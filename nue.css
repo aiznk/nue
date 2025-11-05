@@ -45,6 +45,11 @@
 	display: flex;
 	flex-direction: column;
 }
+.nue_honest-table-grab-row {
+	height: 2px;
+	background: red;	
+	cursor: pointer;
+}
 .nue_honest-row-cell-bar {
 }
 .nue_honest-row-cell-bar--grabbable {

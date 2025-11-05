@@ -1214,6 +1214,31 @@ export class HonestTableRowGrabCell extends Td {
 	}
 }
 
+export class HonestTableGrabRow extends Tr {
+	constructor (index, attrs={}, opts={}) {
+		_setopts(opts, 'events', ['mousedown', 'mouseup', 'mousemove'])
+		super(attrs, opts)
+		this.index = index
+		this.addClass('nue_honest-table-row nue_honest-table-grab-row')
+		this.add(new Td())
+	}
+
+	async onMouseDown (ev) {
+		ev.row = this
+		await this.emit('honestGrabRowMouseDown', ev)
+	}
+
+	async onMouseUp (ev) {
+		ev.row = this
+		await this.emit('honestGrabRowMouseUp', ev)
+	}
+
+	async onMouseMove (ev) {
+		ev.row = this
+		await this.emit('honestGrabRowMouseMove', ev)
+	}
+}
+
 export class HonestTableRowCell extends Td {
 	constructor (attrs={}, opts={}) {
 		super(attrs, opts)
@@ -1245,7 +1270,7 @@ export class HonestTable extends Table {
 		this.editingCell = null
 		this.selectCell = null
 		this.grabCol = null
-		this.isGravCol = false
+		this.isGrabCol = false
 	}
 
 	onMouseLeave (ev) {
@@ -1293,6 +1318,40 @@ export class HonestTable extends Table {
 		return row
 	}
 
+	addRow (row) {
+		let hrow = this.genHeadRow(row.len())
+		this.thead.clear()
+		this.thead.add(hrow)
+
+		this.colgroup.clear()
+		for (let i = 0; i < hrow.len(); i++) {
+			this.colgroup.add(new Col())
+		}
+
+		let r = []
+		let h = this.matrix.length
+
+		for (let x = 0; x < row.children.length; x++) {
+			let cell = row.children[x]
+			cell.pos.x = x
+			cell.pos.y = h
+			cell.addClass(`nue_honest-table-cell_pos-x-${x}`)
+			cell.addClass(`nue_honest-table-cell_pos-y-${h}`)
+			r.push(cell)
+		}
+		this.matrix.push(r)
+
+		let rcell = new HonestTableRowCell()
+		rcell.setText(h+1)
+		row.unshift(rcell)
+		row.pos.y = h
+		row.addClass(`nue_honest-table-row_pos-y-${h}`)
+		this.tbody.add(row)
+
+		let grow = new HonestTableGrabRow(h)
+		this.tbody.add(grow)
+	}
+
 	receive (name, ev) {
 		// console.log(name, ev)
 		switch (name) {
@@ -1307,9 +1366,8 @@ export class HonestTable extends Table {
 			this.grabCol = col
 			this.isGrabCol = true
 		} break
-		case 'honestRowCellBarMouseDown': {
-			let cell = ev.bar.cell
-			let y = cell.index
+		case 'honestGrabRowMouseDown': {
+			let y = ev.row.index*2
 			let row = this.tbody.children[y]
 			this.grabRow = row
 			this.isGrabRow = true
@@ -1330,35 +1388,6 @@ export class HonestTable extends Table {
 			this.editingCell.toEditMode()
 			break
 		}
-	}
-
-	addRow (row) {
-		let hrow = this.genHeadRow(row.len())
-		this.thead.clear()
-		this.thead.add(hrow)
-
-		this.colgroup.clear()
-		for (let i = 0; i < hrow.len(); i++) {
-			this.colgroup.add(new Col())
-		}
-
-		let r = []
-		let h = this.matrix.length
-		for (let x = 0; x < row.children.length; x++) {
-			let cell = row.children[x]
-			cell.pos.x = x
-			cell.pos.y = h
-			cell.addClass(`nue_honest-table-cell_pos-x-${x}`)
-			cell.addClass(`nue_honest-table-cell_pos-y-${h}`)
-			r.push(cell)
-		}
-		this.matrix.push(r)
-		let rcell = new HonestTableRowGrabCell(h)
-		rcell.setText(h+1)
-		row.unshift(rcell)
-		row.pos.y = h
-		row.addClass(`nue_honest-table-row_pos-y-${h}`)
-		this.tbody.add(row)
 	}
 }
 
