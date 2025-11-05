@@ -41,6 +41,19 @@
 	background: red;	
 	cursor: pointer;
 }
+.nue_honest-table-row td div {
+	display: flex;
+	flex-direction: column;
+}
+.nue_honest-row-cell-bar {
+}
+.nue_honest-row-cell-bar--grabbable {
+	display: inline-block;
+	height: 2px;
+	width: 1rem;
+	background: red;	
+	cursor: pointer;	
+}
 .nue_honest-table-cell--select {
 	border: 1px solid red;
 }

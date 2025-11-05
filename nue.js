@@ -845,7 +845,7 @@ export class THead extends Tag {
 export class TBody extends Tag {
 	constructor (attrs={}, opts={}) {
 		opts = _setopts(opts, 'events', [])
-		super('thead', attrs, opts)
+		super('tbody', attrs, opts)
 	}
 }
 
@@ -1041,7 +1041,7 @@ class Vector2i {
 	}
 }
 
-export class HonestInput extends Input {
+export class HonestInput extends Textarea {
 	constructor (attrs={}, opts={}) {
 		super(attrs, opts)
 		this.addClass('nue_honest-input')
@@ -1129,17 +1129,17 @@ class HonestHeadCellBar extends Span {
 
 	async onMouseDown (ev) {
 		ev.bar = this
-		await this.emit('honestCellBarMouseDown', ev)
+		await this.emit('honestHeadCellBarMouseDown', ev)
 	}
 
 	async onMouseUp (ev) {
 		ev.bar = this
-		await this.emit('honestCellBarMouseUp', ev)
+		await this.emit('honestHeadCellBarMouseUp', ev)
 	}
 
 	async onMouseMove (ev) {
 		ev.bar = this
-		await this.emit('honestCellBarMouseMove', ev)
+		await this.emit('honestHeadCellBarMouseMove', ev)
 	}
 }
 
@@ -1158,6 +1158,54 @@ export class HonestTableHeadCell extends Td {
 		if (index) {
 			this.bar.addClass('nue_honest-head-cell-bar--grabbable')
 		}
+		this.box.add(this.bar)
+	}
+
+	setText (text) {
+		this.data.setText(text)
+	}
+}
+
+class HonestRowCellBar extends Div {
+	constructor (cell) {
+		super({
+			class: 'nue_honest-row-cell-bar',
+		}, {
+			events: ['mousedown', 'mouseup', 'mousemove'],
+		})
+		this.cell = cell
+	}
+
+	async onMouseDown (ev) {
+		ev.bar = this
+		await this.emit('honestRowCellBarMouseDown', ev)
+	}
+
+	async onMouseUp (ev) {
+		ev.bar = this
+		await this.emit('honestRowCellBarMouseUp', ev)
+	}
+
+	async onMouseMove (ev) {
+		ev.bar = this
+		await this.emit('honestRowCellBarMouseMove', ev)
+	}
+}
+
+export class HonestTableRowGrabCell extends Td {
+	constructor (index, attrs={}, opts={}) {
+		super(attrs, opts)
+		
+		this.index = index
+
+		this.box = new Div()
+		this.add(this.box)
+
+		this.data = new Div()
+		this.box.add(this.data)
+
+		this.bar = new HonestRowCellBar(this)
+		this.bar.addClass('nue_honest-row-cell-bar--grabbable')
 		this.box.add(this.bar)
 	}
 
@@ -1202,28 +1250,32 @@ export class HonestTable extends Table {
 
 	onMouseLeave (ev) {
 		this.isGrabCol = false
+		this.isGrabRow = false
 	}
 
 	onMouseUp (ev) {
 		this.grabCol = null
 		this.isGrabCol = false	
+		this.grabRow = null
+		this.isGrabRow = false
 	}
 
 	onMouseMove (ev) {
 		if (this.isGrabCol) {
 			let r = this.grabCol.elem.getBoundingClientRect()
 			let s = this.grabCol.parseStyle()
-			let m = /(.+)px/.exec(s['width'])
-			let w 
-			if (m) {
-				w = r.width
-			} else {
-				w = 50
-			}
+			let w = r.width
 			w += ev.movementX
 			w = Math.max(0, w)
-			console.log(w)
 			this.grabCol.setCSS({ width: w + 'px' })
+		} else if (this.isGrabRow) {
+			let r = this.grabRow.elem.getBoundingClientRect()
+			let s = this.grabRow.parseStyle()
+			let m = /(.+)px/.exec(s['height'])
+			let h = r.height
+			h += ev.movementY
+			h = Math.max(0, h)
+			this.grabRow.setCSS({ height: h + 'px' })
 		}
 	}
 
@@ -1248,17 +1300,19 @@ export class HonestTable extends Table {
 			if (ev.code === 'Escape') {
 			}
 			break
-		case 'honestCellBarMouseDown': {
+		case 'honestHeadCellBarMouseDown': {
 			let cell = ev.bar.cell
 			let x = cell.index
 			let col = this.colgroup.children[x]
 			this.grabCol = col
 			this.isGrabCol = true
-			console.log(this.grabCol)
 		} break
-		case 'honestCellBarMouseUp': {
-		} break
-		case 'honestCellBarMouseMove': {
+		case 'honestRowCellBarMouseDown': {
+			let cell = ev.bar.cell
+			let y = cell.index
+			let row = this.tbody.children[y]
+			this.grabRow = row
+			this.isGrabRow = true
 		} break
 		case 'honestTableCellClick':
 			if (this.selectCell) {
@@ -1299,7 +1353,7 @@ export class HonestTable extends Table {
 			r.push(cell)
 		}
 		this.matrix.push(r)
-		let rcell = new HonestTableRowCell()
+		let rcell = new HonestTableRowGrabCell(h)
 		rcell.setText(h+1)
 		row.unshift(rcell)
 		row.pos.y = h
