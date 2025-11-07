@@ -313,6 +313,7 @@ export class Component {
 		this.opts = Object.assign({}, opts)
 		this.parent = attrs.parent || null
 		this.children = []
+		this.mountElem = null
 		if (name === 'text') {
 			this.elem = document.createTextNode('')
 		} else {
@@ -322,6 +323,12 @@ export class Component {
 		this._bindEvents()
 	}
 
+	mount (query) {
+		this.mountElem = document.querySelector(query)
+		this.mountElem.innerHTML = ''
+		this.mountElem.appendChild(this.elem)
+	}
+	
 	insertTextToCaretPos(text) {
 		const start = this.elem.selectionStart;
 		const end = this.elem.selectionEnd;
@@ -1515,13 +1522,6 @@ export class PanedFrame extends Div {
 export class Root extends Component {
 	constructor (name='div', attrs={}, opts={}) {
 		super(name, attrs)
-		this.mountElem = null
-	}
-
-	mount (query) {
-		this.mountElem = document.querySelector(query)
-		this.mountElem.innerHTML = ''
-		this.mountElem.appendChild(this.elem)
 	}
 }
 
