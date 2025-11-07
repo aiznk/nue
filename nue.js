@@ -328,7 +328,7 @@ export class Component {
 		this.mountElem.innerHTML = ''
 		this.mountElem.appendChild(this.elem)
 	}
-	
+
 	insertTextToCaretPos(text) {
 		const start = this.elem.selectionStart;
 		const end = this.elem.selectionEnd;
@@ -576,6 +576,14 @@ export class Component {
 
 	getValue () {
 		return this.elem.value
+	}
+
+	getHTML () {
+		return this.elem.innerHTML
+	}
+
+	setHTML (html) {
+		this.elem.innerHTML = html
 	}
 
 	setValue (value) {
@@ -1048,14 +1056,24 @@ class Vector2i {
 	}
 }
 
-export class HonestInput extends Textarea {
+export class HonestEntry extends Textarea {
 	constructor (attrs={}, opts={}) {
 		super(attrs, opts)
-		this.addClass('nue_honest-input')
+		this.addClass('nue_honest-entry')
 	}
 
 	onKeydown (ev) {
 		this.emit('honestInputKeydown', ev)
+	}
+
+	insertNewline (ev) {
+		const start = this.elem.selectionStart
+		const end = this.elem.selectionEnd
+		this.elem.value =
+			this.elem.value.substring(0, start) + '\n' +
+			this.elem.value.substring(end)
+
+		this.elem.selectionStart = this.elem.selectionEnd = start + 1
 	}
 }
 
@@ -1064,21 +1082,32 @@ export class HonestTableCell extends Td {
 		_setopts(opts, 'events', ['click', 'dblclick'])
 		super(attrs, opts)
 		this.addClass('nue_honest-table-cell')
-		this.pos = new Vector2i()
 		this.mode = 'normal'
-		this.input = null
-		this.oldText = ''
+		this.entry = null
+		this.oldContent = ''
+		this.pos = new Vector2i()
 	}
 
 	async receive (name, ev) {
 		switch (name) {
 		case 'honestInputKeydown':
-			if (ev.code === 'Escape') {
-				this.toNormalMode({ undo: true })
-				await this.emit('honestInputKeydown', ev)
-			} else if (ev.code === 'Enter') {
-				this.toNormalMode()
-				await this.emit('honestTableCellSetValue', this.getText())
+			if (ev.ctrlKey) {
+				switch (ev.code) {
+				case 'Enter':
+					this.entry.insertNewline(ev)
+					break
+				}
+			} else {
+				switch (ev.code) {
+				case 'Escape':
+					this.toNormalMode({ undo: true })
+					await this.emit('honestInputKeydown', ev)
+					break
+				case 'Enter':
+					this.toNormalMode()
+					await this.emit('honestTableCellSetValue', this.getText())
+					break
+				}
 			}
 			break
 		}
@@ -1098,29 +1127,29 @@ export class HonestTableCell extends Td {
 		undo=false,
 	}={}) {
 		this.mode = 'normal'
-		if (this.input) {
+		if (this.entry) {
 			this.clear()
 			if (undo) {
-				this.setText(this.oldText)
+				this.setText(this.oldContent)
 			} else {
-				let value = this.input.getValue()
+				let value = this.entry.getValue()
 				this.setText(value)
 			}
-			this.input = null
+			this.entry = null
 		}
 	}
 
 	toEditMode () {
 		this.mode = 'edit'
-		if (this.input) {
+		if (this.entry) {
 			this.toNormalMode()
 		}
-		this.oldText = this.getText()
+		this.oldContent = this.getText()
 		this.setText('')
-		this.input = new HonestInput()
-		this.input.setValue(this.oldText)
-		this.add(this.input)
-		this.input.elem.focus()
+		this.entry = new HonestEntry()
+		this.entry.setValue(this.oldContent)
+		this.add(this.entry)
+		this.entry.elem.focus()
 	}
 }
 
@@ -1155,10 +1184,14 @@ export class HonestTableHeadCell extends Td {
 		super(attrs, opts)
 		this.index = index
 		
-		this.box = new Div()
+		this.box = new Div({
+			class: 'nue_honest-head-cell_box',
+		})
 		this.add(this.box)
 
-		this.data = new Span()
+		this.data = new Span({
+			class: 'nue_honest-head-cell_data',
+		})
 		this.box.add(this.data)
 
 		this.bar = new HonestHeadCellBar(this)
@@ -1176,7 +1209,7 @@ export class HonestTableHeadCell extends Td {
 class HonestRowCellBar extends Div {
 	constructor (cell) {
 		super({
-			class: 'nue_honest-row-cell-bar',
+			class: 'nue_honest-row-cell-bar nue_honest-row-cell-bar--grabbable',
 		}, {
 			events: ['mousedown', 'mouseup', 'mousemove'],
 		})
@@ -1205,14 +1238,17 @@ export class HonestTableRowGrabCell extends Td {
 		
 		this.index = index
 
-		this.box = new Div()
+		this.box = new Div({
+			class: 'nue_honest-table-row-grab-cell_box',
+		})
 		this.add(this.box)
 
-		this.data = new Div()
+		this.data = new Div({
+			class: 'nue_honest-table-row-grab-cell_data',
+		})
 		this.box.add(this.data)
 
 		this.bar = new HonestRowCellBar(this)
-		this.bar.addClass('nue_honest-row-cell-bar--grabbable')
 		this.box.add(this.bar)
 	}
 
@@ -1227,7 +1263,6 @@ export class HonestTableGrabRow extends Tr {
 		super(attrs, opts)
 		this.index = index
 		this.addClass('nue_honest-table-row nue_honest-table-grab-row')
-		this.add(new Td())
 	}
 
 	async onMouseDown (ev) {
@@ -1249,6 +1284,7 @@ export class HonestTableGrabRow extends Tr {
 export class HonestTableRowCell extends Td {
 	constructor (attrs={}, opts={}) {
 		super(attrs, opts)
+		this.pos = new Vector2i()
 	}
 }
 
@@ -1348,15 +1384,12 @@ export class HonestTable extends Table {
 		}
 		this.matrix.push(r)
 
-		let rcell = new HonestTableRowCell()
+		let rcell = new HonestTableRowGrabCell(h)
 		rcell.setText(h+1)
 		row.unshift(rcell)
 		row.pos.y = h
 		row.addClass(`nue_honest-table-row_pos-y-${h}`)
 		this.tbody.add(row)
-
-		let grow = new HonestTableGrabRow(h)
-		this.tbody.add(grow)
 	}
 
 	receive (name, ev) {
@@ -1373,12 +1406,18 @@ export class HonestTable extends Table {
 			this.grabCol = col
 			this.isGrabCol = true
 		} break
-		case 'honestGrabRowMouseDown': {
-			let y = ev.row.index*2
+		case 'honestRowCellBarMouseDown': {
+			let y = ev.bar.cell.index	
 			let row = this.tbody.children[y]
 			this.grabRow = row
 			this.isGrabRow = true
 		} break
+		// case 'honestGrabRowMouseDown': {
+		// 	let y = ev.row.index*2
+		// 	let row = this.tbody.children[y]
+		// 	this.grabRow = row
+		// 	this.isGrabRow = true
+		// } break
 		case 'honestTableCellClick':
 			if (this.selectCell) {
 				this.selectCell.removeClass('nue_honest-table-cell--select')
