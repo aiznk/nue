@@ -5,40 +5,56 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="../nue.css">
 	<title>Table</title>
+	<style>
+		* {
+			box-sizing: border-box;
+		}
+		body {
+			margin: 0;
+			padding: 1rem;
+		}
+		.root,
+		#app,
+		body,
+		html {
+			width: 100%;
+			height: 100%;
+		}
+		table {
+			width: 800px;
+			height: 400px;
+		}
+	</style>
 	<script type="module">
 		import * as nue from "../nue.js"
 
-		class Table extends nue.HonestTable {
-			constructor () {
-				super()
-			}
-
-			receive (name, ev) {
-				super.receive(name, ev)
-
-				switch (name) {
-				case 'honestTableCellSetValue':
-					alert(ev)
-					break
-				}
-			}
-		}
-
 		class Root extends nue.Root {
 			constructor () {
-				super()
-				this.table = new Table()
+				super('div', { class: 'root' })
+				
+				this.table = new nue.HonestTable()
 				this.add(this.table)
 
-				for (let y = 0; y < 3; y++) {
+				for (let y = 0; y < 16; y++) {
 					let row = new nue.HonestTableRow()
-					let cellTexts = [y+10, 'bbb', y+20]
-					for (let text of cellTexts) {
+					for (let x = 0; x < 16; x++) {
 						let cell = new nue.HonestTableCell()
-						cell.setText(text)
+						cell.setText(`${x}:${y}`)
 						row.add(cell)
 					}
 					this.table.addRow(row)
+				}
+
+				this.status = new nue.P()
+				this.add(this.status)
+			}
+
+			async receive (name, ev) {
+				console.log(name)
+				switch (name) {
+				case 'honestTableCellSetValue':
+					this.status.setText(`Edited: ${ev}`)
+					break
 				}
 			}
 		}

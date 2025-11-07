@@ -20,11 +20,10 @@
 
 .nue_honest-table {
 	border: 1px solid gray;
-	height: 100%;
 }
 .nue_honest-table,
 .nue_honest-table td {
-	height: 100%;
+	user-select: none;
 }
 .nue_honest-table tr {
 	margin: 0;

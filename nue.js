@@ -1392,12 +1392,11 @@ export class HonestTable extends Table {
 		this.tbody.add(row)
 	}
 
-	receive (name, ev) {
+	async receive (name, ev) {
 		// console.log(name, ev)
 		switch (name) {
-		case 'honestInputKeydown':
-			if (ev.code === 'Escape') {
-			}
+		default:
+			await this.emit(name, ev)
 			break
 		case 'honestHeadCellBarMouseDown': {
 			let cell = ev.bar.cell
@@ -1412,12 +1411,6 @@ export class HonestTable extends Table {
 			this.grabRow = row
 			this.isGrabRow = true
 		} break
-		// case 'honestGrabRowMouseDown': {
-		// 	let y = ev.row.index*2
-		// 	let row = this.tbody.children[y]
-		// 	this.grabRow = row
-		// 	this.isGrabRow = true
-		// } break
 		case 'honestTableCellClick':
 			if (this.selectCell) {
 				this.selectCell.removeClass('nue_honest-table-cell--select')
