@@ -118,10 +118,16 @@
 		import * as nue from "../nue.js"
 
 		class TodoList extends nue.Ul {
-			constructor () { super({ class: 'todo-list' }) }
-			receive (key, ev) {
-				if (key === 'removeItem') this.removeItem(ev)
+			constructor () {
+				super({ class: 'todo-list' })
 			}
+
+			receive (key, ev) {
+				if (key === 'removeItem') {
+					this.removeItem(ev)
+				}
+			}
+
 			removeItem (itemText) {
 				for (let child of this.children) {
 					if (child.text === itemText) {
@@ -135,8 +141,11 @@
 		class TodoListItem extends nue.Li {
 			constructor (text) {
 				super({ class: 'todo-list-item' })
+
 				this.text = text
-				this.removeBtn = new nue.Button('×', () => this.emit('removeItem', text), {
+				this.removeBtn = new nue.Button('×', () => {
+					this.emit('removeItem', text)
+				}, {
 					class: 'remove-item-btn',
 				})
 				this.template(`
@@ -148,11 +157,15 @@
 
 		class TodoInput extends nue.Input {
 			constructor () {
-				super({ class: 'todo-input', placeholder: 'やることを入力してEnter...' })
+				super({
+					class: 'todo-input',
+					placeholder: 'やることを入力してEnter...',
+				})
 			}
-			onKeydown (ev) {
+
+			async onKeydown (ev) {
 				if (ev.code === 'Enter' && ev.target.value.trim()) {
-					this.emit('enterInput', ev.target.value.trim())
+					await this.emit('enterInput', ev.target.value.trim())
 					this.setValue('')
 				}
 			}
@@ -181,9 +194,13 @@
 					</div>
 				`, { components: { TodoList: this.list, TodoEditor: this.editor } })
 			}
+
 			receive (key, ev) {
-				if (key === 'enterInput') this.addTodoItem(ev)
+				if (key === 'enterInput') {
+					this.addTodoItem(ev)
+				}
 			}
+
 			addTodoItem (todoText) {
 				this.list.add(new TodoListItem(todoText))
 			}
