@@ -1079,7 +1079,8 @@ export class HonestEntry extends Textarea {
 
 export class HonestTableCell extends Td {
 	constructor (attrs={}, opts={}) {
-		_setopts(opts, 'events', ['click', 'dblclick'])
+		attrs['tabindex'] = 0
+		_setopts(opts, 'events', ['click', 'dblclick', 'keydown'])
 		super(attrs, opts)
 		this.addClass('nue_honest-table-cell')
 		this.mode = 'normal'
@@ -1110,6 +1111,16 @@ export class HonestTableCell extends Td {
 				}
 			}
 			break
+		}
+	}
+
+	async onKeydown (ev) {
+		if (ev.ctrlKey) {
+			switch (ev.key) {
+			case 'c':
+				await this.emit('honestTableCopyCellText', this.getText())
+				break
+			}
 		}
 	}
 
@@ -1257,37 +1268,6 @@ export class HonestTableRowGrabCell extends Td {
 	}
 }
 
-export class HonestTableGrabRow extends Tr {
-	constructor (index, attrs={}, opts={}) {
-		_setopts(opts, 'events', ['mousedown', 'mouseup', 'mousemove'])
-		super(attrs, opts)
-		this.index = index
-		this.addClass('nue_honest-table-row nue_honest-table-grab-row')
-	}
-
-	async onMouseDown (ev) {
-		ev.row = this
-		await this.emit('honestGrabRowMouseDown', ev)
-	}
-
-	async onMouseUp (ev) {
-		ev.row = this
-		await this.emit('honestGrabRowMouseUp', ev)
-	}
-
-	async onMouseMove (ev) {
-		ev.row = this
-		await this.emit('honestGrabRowMouseMove', ev)
-	}
-}
-
-export class HonestTableRowCell extends Td {
-	constructor (attrs={}, opts={}) {
-		super(attrs, opts)
-		this.pos = new Vector2i()
-	}
-}
-
 export class HonestTableRow extends Tr {
 	constructor (attrs={}, opts={}) {
 		super(attrs, opts)
@@ -1398,6 +1378,11 @@ export class HonestTable extends Table {
 		default:
 			await this.emit(name, ev)
 			break
+		case 'honestTableCopyCellText': {
+			if (navigator && navigator.clipboard) {
+				navigator.clipboard.writeText(ev)
+			}
+		} break
 		case 'honestHeadCellBarMouseDown': {
 			let cell = ev.bar.cell
 			let x = cell.index

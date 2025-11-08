@@ -59,9 +59,6 @@
 	width: calc(100% - 4px);
 	height: calc(100% - 4px);
 }
-.nue_honest-table-cell {
-	height: auto;
-}
 .nue_honest-entry:focus {
 	outline: none;
 }
@@ -98,12 +95,16 @@
 	cursor: pointer;	
 }
 .nue_honest-table-cell--select {
-	border: 1px solid red;
+	/*border: 1px solid red!important;*/
 }
-.nue_honest-input {
+.nue_honest-table-cell:focus {
+	border: 1px solid red!important;
+	outline: none;
+}
+.nue_honest-entry {
 	border: 0;
 	font-size: 1rem;
 }
-.nue_honest-input:focus {
+.nue_honest-entry:focus {
 	outline: 0;
 }
