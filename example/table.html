@@ -46,11 +46,13 @@
 			}
 
 			async receive (name, ev) {
-				console.log(name)
 				switch (name) {
-				case 'honestTableCellSetValue':
-					this.status.setText(`Edited: ${ev}`)
-					break
+				case 'honestTableCellSetValue': {
+					let x = ev.nue.x
+					let y = ev.nue.y
+					let text = ev.nue.text
+					this.status.setText(`Edited: (${x}, ${y}) [${text}]`)
+				} break
 				}
 			}
 		}

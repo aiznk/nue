@@ -1077,6 +1077,14 @@ export class HonestEntry extends Textarea {
 	}
 }
 
+export class EventData {
+	constructor () {
+		this.x = 0
+		this.y = 0
+		this.text = null
+	}
+}
+
 export class HonestTableCell extends Td {
 	constructor (attrs={}, opts={}) {
 		attrs['tabindex'] = 0
@@ -1104,10 +1112,16 @@ export class HonestTableCell extends Td {
 					this.toNormalMode({ undo: true })
 					await this.emit('honestInputKeydown', ev)
 					break
-				case 'Enter':
+				case 'Enter': {
 					this.toNormalMode()
-					await this.emit('honestTableCellSetValue', this.getText())
-					break
+
+					let data = new EventData()
+					data.x = this.pos.x
+					data.y = this.pos.y
+					data.text = this.getText()
+					ev.nue = data
+					await this.emit('honestTableCellSetValue', ev)
+				} break
 				}
 			}
 			break
