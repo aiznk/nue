@@ -933,21 +933,21 @@ export class FilterEntry extends Div {
 		this.input = new FilterEntryInput()
 		this.add(this.input)
 
-		this.undoBtn = new Button(undoBtnText, function (ev) {
-			this.emit('filterEntryUndo', ev)
+		this.undoBtn = new Button(undoBtnText, async function (ev) {
+			await this.emit('filterEntryUndo', ev)
 		})
 		this.add(this.undoBtn)
 	}
 
-	receive (name, ev) {
+	async receive (name, ev) {
 		switch (name) {
 		case 'filterEntryExec':
 			ev.selectValue = this.select.getValue()
 			ev.inputValue = this.input.getValue()
-			this.emit(name, ev)
+			await this.emit(name, ev)
 			break
 		case 'filterEntryUndo':
-			this.emit(name, ev)
+			await this.emit(name, ev)
 			break
 		}
 	}
