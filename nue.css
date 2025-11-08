@@ -73,7 +73,7 @@
 .nue_honest-head-cell-bar--grabbable {
 	display: inline-block;
 	width: 2px;
-	cursor: pointer;
+	cursor: grab;
 }
 .nue_honest-table-row tbody td div {
 	display: flex;
@@ -96,7 +96,7 @@
 	display: inline-block;
 	height: 2px;
 	width: 100%;
-	cursor: pointer;	
+	cursor: grab;	
 }
 .nue_honest-table-cell--select {
 	/*border: 1px solid red!important;*/
