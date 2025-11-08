@@ -1462,6 +1462,10 @@ export class PanedFrame extends Div {
 		this.cs = [] // components
 		this.dragX = 0
 		this.dragY = 0
+		this.startWidth = [0, 0]
+		this.startHeight = [0, 0]
+		this.startX = 0
+		this.startY = 0
 	}
 
 	// 0   1   2   3   4
@@ -1493,7 +1497,7 @@ export class PanedFrame extends Div {
 	}
 
 	fixCompoStyle (c, ev, evkey, style, key, d) {
-		let m = /([0-9\.]+)(px|em|rem|\%)/.exec(style[key])
+		let m = /([0-9\.]+)(px|\%)/.exec(style[key])
 
 		if (m) {
 			let n = parseFloat(m[1])
@@ -1513,6 +1517,54 @@ export class PanedFrame extends Div {
 		return style
 	}
 
+	_fixY (ev, i, d) {
+		let c = this.cs[i]
+		let s = c.parseStyle()
+		const dy = ev.clientY - this.startY
+		let newHeight = this.startHeight[i] + (dy*d)
+
+		let m = /([0-9\.]+)(px|\%)/.exec(s['height'])
+		if (m) {
+			let n = parseFloat(m[1])
+			let suf = m[2]
+
+			if (suf === 'px') {
+				c.setCSS({ height: newHeight + 'px' })
+			} else if (suf === '%') {
+				const parentHeight = c.parent.elem.getBoundingClientRect().height
+				n = (newHeight / parentHeight * 100)
+				c.setCSS({
+					height: n + suf,
+				})					
+			}
+		}
+
+	}
+
+	_fixX (ev, i, d) {
+		let c = this.cs[i]
+		let s = c.parseStyle()
+		const dx = ev.clientX - this.startX
+		let newWidth = this.startWidth[i] + (dx*d)
+
+		let m = /([0-9\.]+)(px|\%)/.exec(s['width'])
+		if (m) {
+			let n = parseFloat(m[1])
+			let suf = m[2]
+
+			if (suf === 'px') {
+				c.setCSS({ width: newWidth + 'px' })
+			} else if (suf === '%') {
+				const parentHeight = c.parent.elem.getBoundingClientRect().width
+				n = (newWidth / parentHeight * 100)
+				c.setCSS({
+					width: n + suf,
+				})					
+			}
+		}
+
+	}
+
 	onMouseMove (ev) {
 		if (!this.isDragging) {
 			return
@@ -1524,12 +1576,12 @@ export class PanedFrame extends Div {
 
 		switch (this.mode) {
 		case 'horizontal':
-			this.fixCompoStyle(this.cs[0], ev, 'movementX', s1, 'width', 0.05)
-			this.fixCompoStyle(this.cs[1], ev, 'movementX', s2, 'width', -0.05)
+			this._fixX(ev, 0, 1)
+			this._fixX(ev, 1, -1)
 			break
 		case 'vertical':
-			this.fixCompoStyle(this.cs[0], ev, 'movementY', s1, 'height', 0.05)
-			this.fixCompoStyle(this.cs[1], ev, 'movementY', s2, 'height', -0.05)
+			this._fixY(ev, 0, 1)
+			this._fixY(ev, 1, -1)
 			break
 		}
 
@@ -1546,6 +1598,12 @@ export class PanedFrame extends Div {
 		case 'mouseDown': 
 			this.isDragging = true
 			this.cs = ev.cs
+			this.startX = ev.clientX
+			this.startY = ev.clientY
+			this.startWidth[0] = this.cs[0].elem.getBoundingClientRect().width
+			this.startWidth[1] = this.cs[1].elem.getBoundingClientRect().width
+			this.startHeight[0] = this.cs[0].elem.getBoundingClientRect().height
+			this.startHeight[1] = this.cs[1].elem.getBoundingClientRect().height
 			break
 		}
 	}
