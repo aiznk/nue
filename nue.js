@@ -1496,27 +1496,6 @@ export class PanedFrame extends Div {
 		super.add(c)
 	}
 
-	fixCompoStyle (c, ev, evkey, style, key, d) {
-		let m = /([0-9\.]+)(px|\%)/.exec(style[key])
-
-		if (m) {
-			let n = parseFloat(m[1])
-			let t = m[2]
-			if (t === 'px') {
-				d *= 20
-			}
-			n += ev[evkey] * d
-			if (t === '%') {
-				n = Math.min(n, 100)
-				n = Math.max(n, 0)
-			}
-			style[key] = n + m[2]
-			c.setCSS(style)
-		}
-
-		return style
-	}
-
 	_fixY (ev, i, d) {
 		let c = this.cs[i]
 		let s = c.parseStyle()
