@@ -1,9 +1,88 @@
 <!DOCTYPE html>
-<html>
+<html lang="ja">
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<title>Filter List</title>
+	<style>
+		body {
+			font-family: "Segoe UI", "Hiragino Sans", sans-serif;
+			background: #f5f7fa;
+			display: flex;
+			justify-content: center;
+			padding: 3rem 1rem;
+			margin: 0;
+		}
+
+		#app {
+			width: 480px;
+		}
+
+		/* ===== Filter Entry ===== */
+		.nue_filter-entry {
+			display: flex;
+			align-items: center;
+			gap: 0.5rem;
+			background: #f8fafc;
+			border: 1px solid #dde3ec;
+			border-radius: 0.75rem;
+			padding: 0.5rem 0.75rem;
+			margin-bottom: 1rem;
+		}
+		.nue_filter-entry select {
+			border: none;
+			background: transparent;
+			font-size: 0.95rem;
+			outline: none;
+			cursor: pointer;
+		}
+		.nue_filter-entry-input {
+			flex: 1;
+			border: none;
+			background: transparent;
+			font-size: 0.95rem;
+			outline: none;
+			padding: 0.2rem 0.4rem;
+		}
+		.nue_filter-entry button {
+			border: none;
+			border-radius: 0.5rem;
+			padding: 0.4rem 0.8rem;
+			font-size: 0.9rem;
+			cursor: pointer;
+			background: #4e7bff;
+			color: #fff;
+			transition: background 0.2s ease;
+		}
+		.nue_filter-entry button:hover {
+			background: #3b63dd;
+		}
+
+		/* ===== Filter List ===== */
+		.nue_filter-list {
+			list-style: none;
+			padding: 0;
+			margin: 0;
+			display: flex;
+			flex-direction: column;
+			gap: 0.5rem;
+		}
+		.nue_filter-list-item {
+			background: #fafbfd;
+			border: 1px solid #e0e4eb;
+			border-radius: 0.5rem;
+			padding: 0.75rem 1rem;
+			font-size: 0.95rem;
+			color: #333;
+			cursor: pointer;
+			transition: background 0.15s ease, box-shadow 0.15s ease;
+		}
+		.nue_filter-list-item:hover {
+			background: #eef3ff;
+			box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+		}
+	</style>
+
 	<script type="module">
 		import * as nue from "../nue.js"
 
@@ -24,12 +103,12 @@
 
 			receive (name, ev) {
 				switch (name) {
-				case 'filterEntryExec':
-					this.list.filter(ev.selectValue, ev.inputValue)
-					break
-				case 'filterEntryUndo':
-					this.list.undo()
-					break
+					case 'filterEntryExec':
+						this.list.filter(ev.selectValue, ev.inputValue)
+						break
+					case 'filterEntryUndo':
+						this.list.undo()
+						break
 				}
 			}
 		}

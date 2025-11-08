@@ -1,62 +1,133 @@
 <!DOCTYPE html>
-<html>
+<html lang="ja">
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<title>Todo List</title>
 	<style>
+		/* ========== Reset ========== */
+		* {
+			box-sizing: border-box;
+		}
+		body {
+			font-family: "Segoe UI", sans-serif;
+			background: linear-gradient(135deg, #f6f8fb, #e9edf2);
+			min-height: 100vh;
+			display: flex;
+			justify-content: center;
+			align-items: flex-start;
+			padding: 3rem 1rem;
+		}
+
+		/* ========== App Card ========== */
 		.todo-app {
-			border: 1px solid gray;
-			padding: 1rem;
-			width: fit-content;
+			background: #fff;
+			border-radius: 1rem;
+			box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+			padding: 2rem;
+			width: 360px;
+			display: flex;
+			flex-direction: column;
+			gap: 1rem;
+			transition: transform 0.2s ease;
 		}
+		.todo-app:hover {
+			transform: translateY(-2px);
+		}
+
+		/* ========== Editor ========== */
 		.todo-editor {
-			border: 1px solid gray;
-			padding: 1rem;
-			margin-bottom: 1rem;
+			display: flex;
+			align-items: center;
+			gap: 0.5rem;
+			background: #f8fafc;
+			border: 1px solid #dce3ec;
+			border-radius: 0.75rem;
+			padding: 0.75rem 1rem;
 		}
+		.todo-editor label {
+			font-weight: 600;
+			color: #333;
+			flex-shrink: 0;
+		}
+		.todo-input {
+			flex: 1;
+			border: none;
+			background: transparent;
+			outline: none;
+			font-size: 1rem;
+		}
+		.todo-input::placeholder {
+			color: #aaa;
+		}
+
+		/* ========== List ========== */
 		.todo-list {
 			list-style: none;
-			border: 1px solid gray;
-			padding: 1rem;
 			margin: 0;
+			padding: 0;
+			display: flex;
+			flex-direction: column;
+			gap: 0.5rem;
 		}
 		.todo-list-item {
 			display: flex;
 			justify-content: space-between;
+			align-items: center;
+			background: #f9fbfe;
+			border: 1px solid #e1e6ec;
+			border-radius: 0.5rem;
+			padding: 0.6rem 0.9rem;
+			transition: background 0.15s ease;
 		}
-		.todo-list-item:not(:last-child) {
-			margin-bottom: 0.5rem;
+		.todo-list-item:hover {
+			background: #eef3fa;
 		}
+
+		.todo-list-item span {
+			color: #333;
+			font-size: 0.95rem;
+		}
+
+		/* ========== Remove Button ========== */
 		.remove-item-btn {
-			color: red;
+			border: none;
+			background: none;
+			color: #d44;
 			cursor: pointer;
+			font-weight: bold;
+			font-size: 0.9rem;
+			border-radius: 0.3rem;
+			padding: 0.2rem 0.5rem;
+			transition: all 0.2s ease;
+		}
+		.remove-item-btn:hover {
+			background: rgba(255, 0, 0, 0.1);
+			color: #b00;
+		}
+
+		/* ========== Utility ========== */
+		.row {
+			display: flex;
+			flex-direction: column;
+			gap: 1rem;
 		}
 	</style>
+
 	<script type="module">
 		import * as nue from "../nue.js"
 
 		class TodoList extends nue.Ul {
-			constructor () {
-				super({ class: 'todo-list' })
-			}
-
+			constructor () { super({ class: 'todo-list' }) }
 			receive (key, ev) {
-				switch (key) {
-				case 'removeItem': this.removeItem(ev); break
-				}
+				if (key === 'removeItem') this.removeItem(ev)
 			}
-
 			removeItem (itemText) {
-				let found
 				for (let child of this.children) {
 					if (child.text === itemText) {
-						found = child
+						this.remove(child)
 						break
 					}
-				}
-				if (found) {
-					this.remove(found)
 				}
 			}
 		}
@@ -64,30 +135,24 @@
 		class TodoListItem extends nue.Li {
 			constructor (text) {
 				super({ class: 'todo-list-item' })
-
 				this.text = text
-				this.removeBtn = new nue.Button('X', ev => {
-					this.emit('removeItem', text)
-				}, { class: 'remove-item-btn' })
+				this.removeBtn = new nue.Button('×', () => this.emit('removeItem', text), {
+					class: 'remove-item-btn',
+				})
 				this.template(`
 					<span>${text}</span>
 					<RemoveBtn />
-				`, {
-					components: {
-						RemoveBtn: this.removeBtn,
-					}
-				})
+				`, { components: { RemoveBtn: this.removeBtn } })
 			}
 		}
 
 		class TodoInput extends nue.Input {
 			constructor () {
-				super({ class: 'todo-input' })
+				super({ class: 'todo-input', placeholder: 'やることを入力してEnter...' })
 			}
-
 			onKeydown (ev) {
-				if (ev.code === 'Enter') {
-					this.emit('enterInput', ev.target.value)
+				if (ev.code === 'Enter' && ev.target.value.trim()) {
+					this.emit('enterInput', ev.target.value.trim())
 					this.setValue('')
 				}
 			}
@@ -98,20 +163,15 @@
 				super({ class: 'todo-editor' })
 				this.input = new TodoInput()
 				this.template(`
-					<label>Todo: </label>
+					<label>Todo</label>
 					<TodoInput />
-				`, {
-					components: {
-						TodoInput: this.input,
-					},
-				})
+				`, { components: { TodoInput: this.input } })
 			}
 		}
 
 		class Root extends nue.Root {
 			constructor () {
 				super('div', { class: 'todo-app' })
-
 				this.list = new TodoList()
 				this.editor = new TodoEditor()
 				this.template(`
@@ -119,20 +179,11 @@
 						<TodoEditor />
 						<TodoList />
 					</div>
-				`, {
-					components: {
-						TodoList: this.list,
-						TodoEditor: this.editor,
-					}
-				})
+				`, { components: { TodoList: this.list, TodoEditor: this.editor } })
 			}
-
 			receive (key, ev) {
-				switch (key) {
-				case 'enterInput': this.addTodoItem(ev); break
-				}
+				if (key === 'enterInput') this.addTodoItem(ev)
 			}
-
 			addTodoItem (todoText) {
 				this.list.add(new TodoListItem(todoText))
 			}

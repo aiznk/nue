@@ -1,66 +1,124 @@
 <!DOCTYPE html>
-<html>
+<html lang="ja">
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<title>Text Editor</title>
 	<style>
+		/* ========== Reset ========== */
 		* {
-			box-sizing: border-box
+			box-sizing: border-box;
 		}
+		body {
+			font-family: "Segoe UI", "Hiragino Sans", sans-serif;
+			background: #f4f6f9;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			height: 100vh;
+			margin: 0;
+		}
+
+		/* ========== Root Layout ========== */
 		.root {
 			display: flex;
 			flex-direction: column;
-			width: 800px;
-			height: 500px;
-			border: 1px solid gray;
-			padding: 1rem;
+			width: 900px;
+			height: 600px;
+			background: #fff;
+			border-radius: 12px;
+			box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+			overflow: hidden;
 		}
 		.top {
-			flex: 1;
 			display: flex;
-			justify-content: space-between;
+			flex: 1;
+			overflow: hidden;
 		}
 		.bottom {
+			border-top: 1px solid #e0e4ea;
+			padding: 0.75rem 1rem;
+			font-size: 0.9rem;
+			color: #555;
+			background: #fafbfc;
+		}
 
-		}
+		/* ========== Left Pane (List) ========== */
 		.left {
-			width: 20%;
-			padding-right: 1rem;
-		}
-		.right {
-			width: 80%;
+			width: 25%;
+			background: #f7f9fb;
+			border-right: 1px solid #e1e6ec;
+			padding: 1rem;
+			display: flex;
+			flex-direction: column;
 		}
 		.list {
 			list-style: none;
 			padding: 0;
-		}
-		.list-item {
-			border: 1px solid gray;
-			padding: 0.5rem 0.2rem;
-			cursor: pointer;
-		}
-		.list-item:hover {
-			background: #eee;
-		}
-		.list-item:not(:last-child) {
-			margin-bottom: 0.5rem;
-		}
-		.text-label {
-			margin-bottom: 1rem;
-		}
-		.text-frame {
-			width: 100%;
-			height: 100%;			
+			margin: 0;
 			display: flex;
 			flex-direction: column;
+			gap: 0.5rem;
+		}
+		.list-item {
+			padding: 0.6rem 0.8rem;
+			border: 1px solid #d8dee7;
+			border-radius: 6px;
+			background: #fff;
+			cursor: pointer;
+			transition: all 0.2s ease;
+			font-size: 0.95rem;
+			color: #333;
+		}
+		.list-item:hover {
+			background: #eef3fa;
+			border-color: #c7d4ee;
+		}
+		.list-item.active {
+			background: #e2ebfd;
+			border-color: #9db6ff;
+			color: #204ac8;
+			font-weight: 600;
+		}
+
+		/* ========== Right Pane (Editor) ========== */
+		.right {
+			flex: 1;
+			display: flex;
+			flex-direction: column;
+			padding: 1rem;
+			overflow: hidden;
+		}
+		.text-frame {
+			display: flex;
+			flex-direction: column;
+			height: 100%;
+		}
+		.text-label {
+			font-weight: 600;
+			color: #333;
+			margin-bottom: 0.5rem;
 		}
 		.textarea {
-			width: 100%;
 			flex: 1;
+			width: 100%;
+			resize: none;
 			padding: 1rem;
+			font-size: 1rem;
+			border: 1px solid #d8dee7;
+			border-radius: 6px;
+			background: #fdfdfd;
+			line-height: 1.6;
+			outline: none;
+			transition: border 0.2s ease, box-shadow 0.2s ease;
+		}
+		.textarea:focus {
+			border-color: #9db6ff;
+			box-shadow: 0 0 0 2px rgba(157,182,255,0.3);
+			background: #fff;
 		}
 	</style>
+
 	<script type="module">
 		import * as nue from "../nue.js"
 
@@ -76,6 +134,7 @@ This is BBB text.
 This is CCC text.
 This is CCC text.
 `
+
 		class List extends nue.Ul {
 			constructor () {
 				super({ class: 'list' })
@@ -88,7 +147,6 @@ This is CCC text.
 				this.text = text
 				this.setText(text)
 			}
-
 			onClick (ev) {
 				ev.text = this.text
 				this.emit('clickListItem', ev)
@@ -99,7 +157,6 @@ This is CCC text.
 			constructor () {
 				super({ class: 'textarea' })
 			}
-
 			onInput (ev) {
 				this.emit('inputText', ev)
 			}
@@ -112,23 +169,21 @@ This is CCC text.
 
 				this.label = this.gen('label', 'Item:', { class: 'text-label' })
 				this.textarea = new Textarea()
+				this.add(this.label)
 				this.add(this.textarea)
 
-				this.default = `Please select list item.`
+				this.default = `Please select a list item.`
 				this.textarea.setValue(this.default)
 
-				this.refCurrentItem.onSet((_, itemName) => {
-					this.update(itemName)
-				})
+				this.refCurrentItem.onSet((_, itemName) => this.update(itemName))
 			}
-
 			update (itemName) {
 				this.label.setText('Item: ' + itemName)
-
 				switch (itemName) {
-				case 'aaa': this.textarea.setValue(AAA); break
-				case 'bbb': this.textarea.setValue(BBB); break
-				case 'ccc': this.textarea.setValue(CCC); break
+					case 'aaa': this.textarea.setValue(AAA); break
+					case 'bbb': this.textarea.setValue(BBB); break
+					case 'ccc': this.textarea.setValue(CCC); break
+					default: this.textarea.setValue(this.default)
 				}
 			}
 		}
@@ -141,21 +196,21 @@ This is CCC text.
 
 				this.top = this.gen('div', { class: 'top' })
 				this.bottom = this.gen('div', { class: 'bottom' })
-				
+
 				this.left = new nue.Div({ class: 'left' })
 				this.right = new nue.Div({ class: 'right' })
 				this.top.add(this.left)
 				this.top.add(this.right)
 
 				this.status = new nue.P({ class: 'status' })
-				this.status.setText('welcome')
+				this.status.setText('Welcome! Select an item from the list.')
 				this.bottom.add(this.status)
 
 				this.list = new List()
 				this.left.add(this.list)
-				this.list.add(new ListItem('aaa'))
-				this.list.add(new ListItem('bbb'))
-				this.list.add(new ListItem('ccc'))
+
+				this.items = ['aaa', 'bbb', 'ccc'].map(name => new ListItem(name))
+				this.items.forEach(item => this.list.add(item))
 
 				this.textarea = new TextFrame(this.refCurrentItem)
 				this.right.add(this.textarea)
@@ -163,13 +218,21 @@ This is CCC text.
 
 			receive (key, ev) {
 				switch (key) {
-				case 'clickListItem':
-					this.refCurrentItem.value = ev.text
-					this.status.setText(`selected list item "${ev.text}"`)
-					break
-				case 'inputText':
-					this.status.setText(`input! "${ev.data}"`)
-					break
+					case 'clickListItem':
+						this.refCurrentItem.value = ev.text
+						this.status.setText(`Selected list item "${ev.text}"`)
+						this.updateActiveItem(ev.text)
+						break
+					case 'inputText':
+						this.status.setText(`Typing...`)
+						break
+				}
+			}
+
+			updateActiveItem (text) {
+				for (let item of this.items) {
+					if (item.text === text) item.el.classList.add('active')
+					else item.el.classList.remove('active')
 				}
 			}
 		}
