@@ -50,6 +50,7 @@
 }
 .nue_honest-table-cell {
 	white-space: pre-line;
+	height: 1rem;
 }
 .nue_honest-entry {
 	border: 0;
@@ -77,6 +78,9 @@
 .nue_honest-table-row tbody td div {
 	display: flex;
 	flex-direction: column;
+}
+.nue_honest-table-row-grab-cell {
+	height: 1rem;
 }
 .nue_honest-table-row-grab-cell_box {
 	height: 100%;

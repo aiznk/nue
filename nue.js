@@ -1260,6 +1260,7 @@ class HonestRowCellBar extends Div {
 export class HonestTableRowGrabCell extends Td {
 	constructor (index, attrs={}, opts={}) {
 		super(attrs, opts)
+		this.addClass('nue_honest-table-row-grab-cell')
 		
 		this.index = index
 
