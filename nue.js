@@ -490,6 +490,10 @@ export class Component {
 		return this
 	}
 
+	getAttr (key, defval=null) {
+		return this.elem.getAttribute(key) || defval
+	}
+	
 	setAttr (key, val) {
 		// console.log(`key[${key}] val[${val}]`)
 		key = this.convAttrKey(key)
