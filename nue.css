@@ -20,6 +20,7 @@
 	bottom: -1px;
 }
 .nue_notebook-tab {
+	user-select: none;
 	cursor: pointer;
 	display: inline-block;
 	border-top-left-radius: var(--bd-rad);	
