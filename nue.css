@@ -1,5 +1,32 @@
 :root {
 	--color-black: #333;
+	--color-white: white;
+	--bd-rad: 5px;
+	--py: 1rem;
+	--px: 1.618rem;
+}
+.nue_notebook {
+}
+.nue_notebook_tabs {
+}
+.nue_notebook_body {
+	border: 1px solid var(--color-black);
+	border-top-right-radius: var(--bd-rad);
+	border-bottom-right-radius: var(--bd-rad);
+	border-bottom-left-radius: var(--bd-rad);
+}
+.nue_notebook-tab--activate {
+	position: relative;
+	bottom: -1px;
+}
+.nue_notebook-tab {
+	cursor: pointer;
+	display: inline-block;
+	border-top-left-radius: var(--bd-rad);	
+	border-top-right-radius: var(--bd-rad);
+	border: 1px solid var(--color-black);
+	border-bottom: 1px solid var(--color-white);
+	padding: calc(var(--py)*0.5) calc(var(--px)*0.5);
 }
 .nue_paned-frame {
 	display: flex;
