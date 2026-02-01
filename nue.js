@@ -1,311 +1,3 @@
-/**
- * Nue v0.1.0
- * License: MIT
- */
-
-export function ref (value) {
-	let obj = {
-		value,
-		getListeners: [],
-		setListeners: [],
-	}
-	let proxy = new Proxy(obj, {
-		get (target, prop) {
-			for (let fn of target.getListeners) {
-				fn(target[prop])
-			}
-			return target[prop]
-		},
-		set (target, prop, val) {
-			let old = target[prop]
-			target[prop] = val
-			for (let fn of target.setListeners) {
-				fn(old, val)
-			}
-			return true
-		},
-	})
-	obj.call = (funcname, ...args) => {
-		obj.value[funcname](...args)
-		for (let fn of obj.setListeners) {
-			fn(obj.value, obj.value)
-		}
-	}
-	obj.onGet = fn => {
-		obj.getListeners.push(fn)
-	}
-	obj.onSet = fn => {
-		obj.setListeners.push(fn)
-	}
-	obj.removeGetListener = fn => {
-		obj.getListeners = obj.getListeners.filter(func => func !== fn)
-	}
-	obj.removeSetListener = fn => {
-		obj.setListeners = obj.setListeners.filter(func => func !== fn)
-	}
-	return proxy
-}
-
-class TemplateTag {
-	constructor () {
-		this.name = null
-		this.attrs = {}
-		this.type = 'begin'
-		this.text = ''
-		this.index = 0
-		this.code = null
-	}
-
-	skipSpaces () {
-		for (; this.index < this.code.length; this.index++) {
-			let c = this.code[this.index]
-			if (c === ' ' || c === '　') {
-				// pass
-			} else {
-				break
-			}
-		}
-	}
-
-	parseName () {
-		this.skipSpaces()
-		this.name = ''
-
-		if (this.code[this.index] === '/') {
-			this.type = 'end'
-			this.index++
-		}
-
-		for (; this.index < this.code.length; this.index++) {
-			let c = this.code[this.index]
-			// console.log(`name: [${c}]`)
-			if (c === '>' || c === ' ') {
-				break
-			} else if (c === '/') {
-				this.type = 'close'
-			} else {
-				this.name += c
-			}
-		}
-
-		this.skipSpaces()
-	}
-
-	parseAttrKey () {
-		this.skipSpaces()
-		let key = ''
-		for (; this.index < this.code.length; this.index++) {
-			let c = this.code[this.index]
-			// console.log(`key: [${c}]`)
-			if (c === '/') {
-				this.type = 'end'
-			} else if (c === '>' || c === '=' ||
-			           c === ' ' || c === '　') {
-				break
-			} else {
-				key += c
-			}
-		}		
-		this.skipSpaces()
-		return key
-	}
-
-	parseAttrValue () {
-		this.skipSpaces()
-		let val = ''
-		let m = 0
-		if (this.code[this.index] === '"') {
-			m = 10
-			this.index++
-		}
-		for (; this.index < this.code.length; this.index++) {
-			let c = this.code[this.index]
-			// console.log(`value: [${c}]`)
-			if (m === 0) {
-				if (c === '/') {
-					this.type = 'close'
-				} else if (c === '"' || 
-					c === ' ' || c === '　' || c === '>') {
-					break
-				} else {
-					val += c
-				}
-			} else if (m === 10) {
-				if (c === '"') {
-					this.index++
-					break
-				} else {
-					val += c
-				}
-			}
-		}
-		this.skipSpaces()
-		return val
-	}
-
-	parse (i, code) {
-		this.index = i
-		this.code = code
-		let m = 0
-
-		// console.log(`parse enter: [${this.code[this.index]}]`)
-		if (this.code[this.index] === '<') {
-			m = 0 // tag
-			this.index++
-		} else {
-			m = 10 // text content
-		}
-
-		if (m === 0) {
-			this.parseName()
-			// console.log('parseName', this.name)
-
-			for (; this.index < this.code.length; ) {
-				this.skipSpaces()
-				let c = this.code[this.index]
-				// console.log(`parse: [${c}]`)
-
-				if (c === '>') {
-					this.index++
-					break
-				} else if (c === '/') {
-					this.type = 'close'
-					this.index++
-					continue
-				}
-
-				let key = this.parseAttrKey()
-				this.skipSpaces()
-				c = this.code[this.index]
-				if (c === '>') {
-					this.attrs[key] = null
-					break
-				} else if (c === '=') {
-					this.index++
-					let val = this.parseAttrValue()
-					this.attrs[key] = val
-				} else if (c === ' ' || c === '　') {
-					this.attrs[key] = null
-				}
-			}
-		} else {
-			this.type = 'text'
-
-			for (; this.index < this.code.length; this.index++) {
-				let c = this.code[this.index]
-				if (c === '<') {
-					break
-				} else {
-					this.text += c
-				}
-			}
-		}
-
-		return this.index
-	}
-}
-
-class Template {
-	constructor () {
-		this.tTags = []
-		this.root = new Tag('TemplateRoot')
-		this.components = {}
-	}
-
-	parse (code, {
-		components={},
-	}={}) {
-		this.tTags = []
-		this.components = components
-
-		for (let i = 0; i < code.length; ) {
-			let tag = new TemplateTag()
-			i = tag.parse(i, code)
-			this.tTags.push(tag)
-		}
-
-		// console.log(Object.assign([], this.tTags))
-		this.tree({
-			parent: this.root,
-			children: this.root.children,
-		})
-	}
-
-	hasComponent (name) {
-		return name in this.components
-	}
-
-	getComponent (name) {
-		return this.components[name]
-	}
-
-	tree ({
-		begin=null,
-		parent=null,
-		children=[],
-		dep=0,
-	}={}) {
-		if (!this.tTags.length) {
-			return
-		}
-
-		let tag = this.tTags.shift()
-		// console.log('tree:', dep, tag.name, tag.type)
-
-		if (tag.type === 'begin') {
-			let compo
-			if (this.hasComponent(tag.name)) {
-				compo = this.getComponent(tag.name)
-			} else {
-				compo = new Tag(tag.name, tag.attrs)
-			}
-			compo.parent = parent
-			parent = compo
-			let childs = []
-			this.tree({ 
-				begin: tag,
-				parent,
-				children: childs,
-				dep: dep+1,
-			})
-			for (let child of childs) {
-				compo.add(child)
-			}
-			children.push(compo)
-		} else if (tag.type === 'end') {
-			if (begin) {
-				if (begin.name.toLowerCase() === tag.name.toLowerCase()) {
-					return
-				}
-			}
-		} else if (tag.type === 'close') {
-			let compo
-			if (this.hasComponent(tag.name)) {
-				compo = this.getComponent(tag.name)
-			} else {
-				compo = new Tag(tag.name, tag.attrs)
-			}
-			compo.parent = parent
-			parent = compo
-			children.push(compo)			
-		} else if (tag.type === 'text') {
-			let compo = new Tag('text')
-			compo.setText(tag.text)
-			children.push(compo)
-		}
-
-		this.tree({ begin, parent, children, dep:dep+1 })
-	}
-}
-
-function _oget(o, k, d=null) {
-	if (k in o) {
-		return o[k]
-	} else {
-		return d
-	}
-}
-
 export class Component {
 	constructor (name, attrs={}, opts={}) {
 		this.name = name
@@ -623,282 +315,11 @@ export class Component {
 	}
 }
 
-function _setopts (opts, key, events) {
-	if (!(key in opts)) {
-		opts[key] = events
-	}
-	return opts
-}
-
-export class Tag extends Component {
-	constructor (name, attrs={}, opts={}) {
-		opts = _setopts(opts, 'events', [])
-		super(name, attrs, opts)
-	}
-}
-
-export class Ul extends Tag {
-	constructor (attrs={}, opts={}) {
-		opts = _setopts(opts, 'events', [])
-		super('ul', attrs, opts)
-	}
-}
-
-export class Ol extends Tag {
-	constructor (attrs={}, opts={}) {
-		opts = _setopts(opts, 'events', [])
-		super('ol', attrs, opts)
-	}
-}
-
-export class Li extends Tag {
-	constructor (attrs={}, opts={}) {
-		opts = _setopts(opts, 'events', ['click'])
-		super('li', attrs, opts)
-	}
-}
-
-export class Span extends Tag {
-	constructor (attrs={}, opts={}) {
-		opts = _setopts(opts, 'events', [])
-		super('span', attrs, opts)
-	}
-}
-
-export class Div extends Tag {
-	constructor (attrs={}, opts={}) {
-		opts = _setopts(opts, 'events', [])
-		super('div', attrs, opts)
-	}
-}
-
-export class Hr extends Tag {
-	constructor (text, attrs={}, opts={}) {
-		opts = _setopts(opts, 'events', [])
-		super('hr', attrs, opts)
-	}
-}
-
-export class H1 extends Tag {
-	constructor (text, attrs={}, opts={}) {
-		opts = _setopts(opts, 'events', [])
-		super('h1', attrs, opts)
-		this.setText(text)
-	}
-}
-
-export class H2 extends Tag {
-	constructor (text, attrs={}, opts={}) {
-		opts = _setopts(opts, 'events', [])
-		super('h2', attrs, opts)
-		this.setText(text)
-	}
-}
-
-export class H3 extends Tag {
-	constructor (text, attrs={}, opts={}) {
-		opts = _setopts(opts, 'events', [])
-		super('h3', attrs, opts)
-		this.setText(text)
-	}
-}
-
-export class H4 extends Tag {
-	constructor (text, attrs={}, opts={}) {
-		opts = _setopts(opts, 'events', [])
-		super('h4', attrs, opts)
-		this.setText(text)
-	}
-}
-
-export class H5 extends Tag {
-	constructor (text, attrs={}, opts={}) {
-		opts = _setopts(opts, 'events', [])
-		super('h5', attrs, opts)
-		this.setText(text)
-	}
-}
-
-export class H6 extends Tag {
-	constructor (text, attrs={}, opts={}) {
-		opts = _setopts(opts, 'events', [])
-		super('h6', attrs, opts)
-		this.setText(text)
-	}
-}
-
-export class Label extends Tag {
-	constructor (text, attrs={}, opts={}) {
-		opts = _setopts(opts, 'events', [])
-		super('label', attrs, opts)
-		this.setText(text)
-	}
-}
-
-export class Input extends Tag {
-	constructor (attrs={}, opts={}) {
-		opts = _setopts(opts, 'events', ['input', 'keydown', 'keyup'])
-		super('input', attrs, opts)
-	}
-}
-
-export class Textarea extends Tag {
-	constructor (attrs={}, opts={}) {
-		opts = _setopts(opts, 'events', ['input', 'keydown', 'keyup', 'scroll'])
-		super('textarea', attrs, opts)
-	}
-}
-
-export class Select extends Tag {
-	constructor (attrs={}, opts={}) {
-		opts = _setopts(opts, 'events', ['change'])
-		super('select', attrs, opts)
-	}
-}
-
-export class Section extends Tag {
-	constructor (attrs={}, opts={}) {
-		opts = _setopts(opts, 'events', [])
-		super('section', attrs, opts)
-	}
-}
-
-export class Option extends Tag {
-	constructor (value, text, attrs={}, opts={}) {
-		opts = _setopts(opts, 'events', [])
-		super('option', attrs, opts)
-		this.setValue(value)
-		this.setText(text)
-	}
-}
-
-export class Button extends Tag {
-	constructor (text, command=null, attrs={}, opts={}) {
-		opts = _setopts(opts, 'events', ['click'])
-		super('button', attrs, opts)
-		this.setText(text)
-		this.command = command
-	}
-
-	onClick (ev) {
-		if (this.command) {
-			this.command(ev)
-		}
-	}
-}
-
-export class Img extends Tag {
-	constructor (attrs={}, opts={}) {
-		opts = _setopts(opts, 'events', [])
-		super('img', attrs, opts)
-	}
-}
-
-export class P extends Tag {
-	constructor (attrs={}, opts={}) {
-		opts = _setopts(opts, 'events', [])
-		super('p', attrs, opts)
-	}
-}
-
-export class S extends Tag {
-	constructor (attrs={}, opts={}) {
-		opts = _setopts(opts, 'events', [])
-		super('s', attrs, opts)
-	}
-}
-
-export class Code extends Tag {
-	constructor (attrs={}, opts={}) {
-		opts = _setopts(opts, 'events', [])
-		super('code', attrs, opts)
-	}
-}
-
-export class Pre extends Tag {
-	constructor (attrs={}, opts={}) {
-		opts = _setopts(opts, 'events', [])
-		super('pre', attrs, opts)
-	}
-}
-
-export class I extends Tag {
-	constructor (attrs={}, opts={}) {
-		opts = _setopts(opts, 'events', [])
-		super('i', attrs, opts)
-	}
-}
-
-export class Strong extends Tag {
-	constructor (attrs={}, opts={}) {
-		opts = _setopts(opts, 'events', [])
-		super('strong', attrs, opts)
-	}
-}
-
-export class Canvas extends Tag {
-	constructor (attrs={}, opts={}) {
-		opts = _setopts(opts, 'events', [])
-		super('canvas', attrs, opts)
-	}
-
-	getContext (name) {
-		return this.elem.getContext(name)
-	}
-}
-
-export class Table extends Tag {
-	constructor (attrs={}, opts={}) {
-		opts = _setopts(opts, 'events', [])
-		super('table', attrs, opts)
-	}
-}
-
-export class THead extends Tag {
-	constructor (attrs={}, opts={}) {
-		opts = _setopts(opts, 'events', [])
-		super('thead', attrs, opts)
-	}
-}
-
-export class TBody extends Tag {
-	constructor (attrs={}, opts={}) {
-		opts = _setopts(opts, 'events', [])
-		super('tbody', attrs, opts)
-	}
-}
-
-export class Tr extends Tag {
-	constructor (attrs={}, opts={}) {
-		opts = _setopts(opts, 'events', [])
-		super('tr', attrs, opts)
-	}
-}
-
-export class Td extends Tag {
-	constructor (attrs={}, opts={}) {
-		opts = _setopts(opts, 'events', [])
-		super('td', attrs, opts)
-	}
-}
-
-export class Colgroup extends Tag {
-	constructor (attrs={}, opts={}) {
-		super('colgroup', attrs, opts)
-	}
-}
-
-export class Col extends Tag {
-	constructor (attrs={}, opts={}) {
-		super('col', attrs, opts)
-	}
-}
-
-function _addattr (o, key, val) {
-	if (!(key in o)) {
-		o[key] = val
-	} else {
-		o[key] += val
+export class EventData {
+	constructor () {
+		this.x = 0
+		this.y = 0
+		this.text = null
 	}
 }
 
@@ -1053,13 +474,6 @@ export class FilterList extends Ul {
 	}
 }
 
-class Vector2i {
-	constructor (x=0, y=0) {
-		this.x = x
-		this.y = y
-	}
-}
-
 export class HonestEntry extends Textarea {
 	constructor (attrs={}, opts={}) {
 		super(attrs, opts)
@@ -1078,14 +492,6 @@ export class HonestEntry extends Textarea {
 			this.elem.value.substring(end)
 
 		this.elem.selectionStart = this.elem.selectionEnd = start + 1
-	}
-}
-
-export class EventData {
-	constructor () {
-		this.x = 0
-		this.y = 0
-		this.text = null
 	}
 }
 
@@ -1592,9 +998,568 @@ export class PanedFrame extends Div {
 	}
 }
 
+export function ref (value) {
+	let obj = {
+		value,
+		getListeners: [],
+		setListeners: [],
+	}
+	let proxy = new Proxy(obj, {
+		get (target, prop) {
+			for (let fn of target.getListeners) {
+				fn(target[prop])
+			}
+			return target[prop]
+		},
+		set (target, prop, val) {
+			let old = target[prop]
+			target[prop] = val
+			for (let fn of target.setListeners) {
+				fn(old, val)
+			}
+			return true
+		},
+	})
+	obj.call = (funcname, ...args) => {
+		obj.value[funcname](...args)
+		for (let fn of obj.setListeners) {
+			fn(obj.value, obj.value)
+		}
+	}
+	obj.onGet = fn => {
+		obj.getListeners.push(fn)
+	}
+	obj.onSet = fn => {
+		obj.setListeners.push(fn)
+	}
+	obj.removeGetListener = fn => {
+		obj.getListeners = obj.getListeners.filter(func => func !== fn)
+	}
+	obj.removeSetListener = fn => {
+		obj.setListeners = obj.setListeners.filter(func => func !== fn)
+	}
+	return proxy
+}
+
+export class Tag extends Component {
+	constructor (name, attrs={}, opts={}) {
+		opts = _setopts(opts, 'events', [])
+		super(name, attrs, opts)
+	}
+}
+
+export class Ul extends Tag {
+	constructor (attrs={}, opts={}) {
+		opts = _setopts(opts, 'events', [])
+		super('ul', attrs, opts)
+	}
+}
+
+export class Ol extends Tag {
+	constructor (attrs={}, opts={}) {
+		opts = _setopts(opts, 'events', [])
+		super('ol', attrs, opts)
+	}
+}
+
+export class Li extends Tag {
+	constructor (attrs={}, opts={}) {
+		opts = _setopts(opts, 'events', ['click'])
+		super('li', attrs, opts)
+	}
+}
+
+export class Span extends Tag {
+	constructor (attrs={}, opts={}) {
+		opts = _setopts(opts, 'events', [])
+		super('span', attrs, opts)
+	}
+}
+
+export class Div extends Tag {
+	constructor (attrs={}, opts={}) {
+		opts = _setopts(opts, 'events', [])
+		super('div', attrs, opts)
+	}
+}
+
+export class Hr extends Tag {
+	constructor (text, attrs={}, opts={}) {
+		opts = _setopts(opts, 'events', [])
+		super('hr', attrs, opts)
+	}
+}
+
+export class H1 extends Tag {
+	constructor (text, attrs={}, opts={}) {
+		opts = _setopts(opts, 'events', [])
+		super('h1', attrs, opts)
+		this.setText(text)
+	}
+}
+
+export class H2 extends Tag {
+	constructor (text, attrs={}, opts={}) {
+		opts = _setopts(opts, 'events', [])
+		super('h2', attrs, opts)
+		this.setText(text)
+	}
+}
+
+export class H3 extends Tag {
+	constructor (text, attrs={}, opts={}) {
+		opts = _setopts(opts, 'events', [])
+		super('h3', attrs, opts)
+		this.setText(text)
+	}
+}
+
+export class H4 extends Tag {
+	constructor (text, attrs={}, opts={}) {
+		opts = _setopts(opts, 'events', [])
+		super('h4', attrs, opts)
+		this.setText(text)
+	}
+}
+
+export class H5 extends Tag {
+	constructor (text, attrs={}, opts={}) {
+		opts = _setopts(opts, 'events', [])
+		super('h5', attrs, opts)
+		this.setText(text)
+	}
+}
+
+export class H6 extends Tag {
+	constructor (text, attrs={}, opts={}) {
+		opts = _setopts(opts, 'events', [])
+		super('h6', attrs, opts)
+		this.setText(text)
+	}
+}
+
+export class Label extends Tag {
+	constructor (text, attrs={}, opts={}) {
+		opts = _setopts(opts, 'events', [])
+		super('label', attrs, opts)
+		this.setText(text)
+	}
+}
+
+export class Input extends Tag {
+	constructor (attrs={}, opts={}) {
+		opts = _setopts(opts, 'events', ['input', 'keydown', 'keyup'])
+		super('input', attrs, opts)
+	}
+}
+
+export class Textarea extends Tag {
+	constructor (attrs={}, opts={}) {
+		opts = _setopts(opts, 'events', ['input', 'keydown', 'keyup', 'scroll'])
+		super('textarea', attrs, opts)
+	}
+}
+
+export class Select extends Tag {
+	constructor (attrs={}, opts={}) {
+		opts = _setopts(opts, 'events', ['change'])
+		super('select', attrs, opts)
+	}
+}
+
+export class Section extends Tag {
+	constructor (attrs={}, opts={}) {
+		opts = _setopts(opts, 'events', [])
+		super('section', attrs, opts)
+	}
+}
+
+export class Option extends Tag {
+	constructor (value, text, attrs={}, opts={}) {
+		opts = _setopts(opts, 'events', [])
+		super('option', attrs, opts)
+		this.setValue(value)
+		this.setText(text)
+	}
+}
+
+export class Button extends Tag {
+	constructor (text, command=null, attrs={}, opts={}) {
+		opts = _setopts(opts, 'events', ['click'])
+		super('button', attrs, opts)
+		this.setText(text)
+		this.command = command
+	}
+
+	onClick (ev) {
+		if (this.command) {
+			this.command(ev)
+		}
+	}
+}
+
+export class Img extends Tag {
+	constructor (attrs={}, opts={}) {
+		opts = _setopts(opts, 'events', [])
+		super('img', attrs, opts)
+	}
+}
+
+export class P extends Tag {
+	constructor (attrs={}, opts={}) {
+		opts = _setopts(opts, 'events', [])
+		super('p', attrs, opts)
+	}
+}
+
+export class S extends Tag {
+	constructor (attrs={}, opts={}) {
+		opts = _setopts(opts, 'events', [])
+		super('s', attrs, opts)
+	}
+}
+
+export class Code extends Tag {
+	constructor (attrs={}, opts={}) {
+		opts = _setopts(opts, 'events', [])
+		super('code', attrs, opts)
+	}
+}
+
+export class Pre extends Tag {
+	constructor (attrs={}, opts={}) {
+		opts = _setopts(opts, 'events', [])
+		super('pre', attrs, opts)
+	}
+}
+
+export class I extends Tag {
+	constructor (attrs={}, opts={}) {
+		opts = _setopts(opts, 'events', [])
+		super('i', attrs, opts)
+	}
+}
+
+export class Strong extends Tag {
+	constructor (attrs={}, opts={}) {
+		opts = _setopts(opts, 'events', [])
+		super('strong', attrs, opts)
+	}
+}
+
+export class Canvas extends Tag {
+	constructor (attrs={}, opts={}) {
+		opts = _setopts(opts, 'events', [])
+		super('canvas', attrs, opts)
+	}
+
+	getContext (name) {
+		return this.elem.getContext(name)
+	}
+}
+
+export class Table extends Tag {
+	constructor (attrs={}, opts={}) {
+		opts = _setopts(opts, 'events', [])
+		super('table', attrs, opts)
+	}
+}
+
+export class THead extends Tag {
+	constructor (attrs={}, opts={}) {
+		opts = _setopts(opts, 'events', [])
+		super('thead', attrs, opts)
+	}
+}
+
+export class TBody extends Tag {
+	constructor (attrs={}, opts={}) {
+		opts = _setopts(opts, 'events', [])
+		super('tbody', attrs, opts)
+	}
+}
+
+export class Tr extends Tag {
+	constructor (attrs={}, opts={}) {
+		opts = _setopts(opts, 'events', [])
+		super('tr', attrs, opts)
+	}
+}
+
+export class Td extends Tag {
+	constructor (attrs={}, opts={}) {
+		opts = _setopts(opts, 'events', [])
+		super('td', attrs, opts)
+	}
+}
+
+export class Colgroup extends Tag {
+	constructor (attrs={}, opts={}) {
+		super('colgroup', attrs, opts)
+	}
+}
+
+export class Col extends Tag {
+	constructor (attrs={}, opts={}) {
+		super('col', attrs, opts)
+	}
+}
+
 export class Root extends Component {
 	constructor (name='div', attrs={}, opts={}) {
 		super(name, attrs)
+	}
+}
+
+class TemplateTag {
+	constructor () {
+		this.name = null
+		this.attrs = {}
+		this.type = 'begin'
+		this.text = ''
+		this.index = 0
+		this.code = null
+	}
+
+	skipSpaces () {
+		for (; this.index < this.code.length; this.index++) {
+			let c = this.code[this.index]
+			if (c === ' ' || c === '　') {
+				// pass
+			} else {
+				break
+			}
+		}
+	}
+
+	parseName () {
+		this.skipSpaces()
+		this.name = ''
+
+		if (this.code[this.index] === '/') {
+			this.type = 'end'
+			this.index++
+		}
+
+		for (; this.index < this.code.length; this.index++) {
+			let c = this.code[this.index]
+			// console.log(`name: [${c}]`)
+			if (c === '>' || c === ' ') {
+				break
+			} else if (c === '/') {
+				this.type = 'close'
+			} else {
+				this.name += c
+			}
+		}
+
+		this.skipSpaces()
+	}
+
+	parseAttrKey () {
+		this.skipSpaces()
+		let key = ''
+		for (; this.index < this.code.length; this.index++) {
+			let c = this.code[this.index]
+			// console.log(`key: [${c}]`)
+			if (c === '/') {
+				this.type = 'end'
+			} else if (c === '>' || c === '=' ||
+			           c === ' ' || c === '　') {
+				break
+			} else {
+				key += c
+			}
+		}		
+		this.skipSpaces()
+		return key
+	}
+
+	parseAttrValue () {
+		this.skipSpaces()
+		let val = ''
+		let m = 0
+		if (this.code[this.index] === '"') {
+			m = 10
+			this.index++
+		}
+		for (; this.index < this.code.length; this.index++) {
+			let c = this.code[this.index]
+			// console.log(`value: [${c}]`)
+			if (m === 0) {
+				if (c === '/') {
+					this.type = 'close'
+				} else if (c === '"' || 
+					c === ' ' || c === '　' || c === '>') {
+					break
+				} else {
+					val += c
+				}
+			} else if (m === 10) {
+				if (c === '"') {
+					this.index++
+					break
+				} else {
+					val += c
+				}
+			}
+		}
+		this.skipSpaces()
+		return val
+	}
+
+	parse (i, code) {
+		this.index = i
+		this.code = code
+		let m = 0
+
+		// console.log(`parse enter: [${this.code[this.index]}]`)
+		if (this.code[this.index] === '<') {
+			m = 0 // tag
+			this.index++
+		} else {
+			m = 10 // text content
+		}
+
+		if (m === 0) {
+			this.parseName()
+			// console.log('parseName', this.name)
+
+			for (; this.index < this.code.length; ) {
+				this.skipSpaces()
+				let c = this.code[this.index]
+				// console.log(`parse: [${c}]`)
+
+				if (c === '>') {
+					this.index++
+					break
+				} else if (c === '/') {
+					this.type = 'close'
+					this.index++
+					continue
+				}
+
+				let key = this.parseAttrKey()
+				this.skipSpaces()
+				c = this.code[this.index]
+				if (c === '>') {
+					this.attrs[key] = null
+					break
+				} else if (c === '=') {
+					this.index++
+					let val = this.parseAttrValue()
+					this.attrs[key] = val
+				} else if (c === ' ' || c === '　') {
+					this.attrs[key] = null
+				}
+			}
+		} else {
+			this.type = 'text'
+
+			for (; this.index < this.code.length; this.index++) {
+				let c = this.code[this.index]
+				if (c === '<') {
+					break
+				} else {
+					this.text += c
+				}
+			}
+		}
+
+		return this.index
+	}
+}
+
+class Template {
+	constructor () {
+		this.tTags = []
+		this.root = new Tag('TemplateRoot')
+		this.components = {}
+	}
+
+	parse (code, {
+		components={},
+	}={}) {
+		this.tTags = []
+		this.components = components
+
+		for (let i = 0; i < code.length; ) {
+			let tag = new TemplateTag()
+			i = tag.parse(i, code)
+			this.tTags.push(tag)
+		}
+
+		// console.log(Object.assign([], this.tTags))
+		this.tree({
+			parent: this.root,
+			children: this.root.children,
+		})
+	}
+
+	hasComponent (name) {
+		return name in this.components
+	}
+
+	getComponent (name) {
+		return this.components[name]
+	}
+
+	tree ({
+		begin=null,
+		parent=null,
+		children=[],
+		dep=0,
+	}={}) {
+		if (!this.tTags.length) {
+			return
+		}
+
+		let tag = this.tTags.shift()
+		// console.log('tree:', dep, tag.name, tag.type)
+
+		if (tag.type === 'begin') {
+			let compo
+			if (this.hasComponent(tag.name)) {
+				compo = this.getComponent(tag.name)
+			} else {
+				compo = new Tag(tag.name, tag.attrs)
+			}
+			compo.parent = parent
+			parent = compo
+			let childs = []
+			this.tree({ 
+				begin: tag,
+				parent,
+				children: childs,
+				dep: dep+1,
+			})
+			for (let child of childs) {
+				compo.add(child)
+			}
+			children.push(compo)
+		} else if (tag.type === 'end') {
+			if (begin) {
+				if (begin.name.toLowerCase() === tag.name.toLowerCase()) {
+					return
+				}
+			}
+		} else if (tag.type === 'close') {
+			let compo
+			if (this.hasComponent(tag.name)) {
+				compo = this.getComponent(tag.name)
+			} else {
+				compo = new Tag(tag.name, tag.attrs)
+			}
+			compo.parent = parent
+			parent = compo
+			children.push(compo)			
+		} else if (tag.type === 'text') {
+			let compo = new Tag('text')
+			compo.setText(tag.text)
+			children.push(compo)
+		}
+
+		this.tree({ begin, parent, children, dep:dep+1 })
 	}
 }
 
@@ -1660,4 +1625,33 @@ export function test () {
 	console.assert(t.root.children[2].text === 'eee')
 
 	console.log('OK')
+}
+function _oget(o, k, d=null) {
+	if (k in o) {
+		return o[k]
+	} else {
+		return d
+	}
+}
+
+function _setopts (opts, key, events) {
+	if (!(key in opts)) {
+		opts[key] = events
+	}
+	return opts
+}
+
+function _addattr (o, key, val) {
+	if (!(key in o)) {
+		o[key] = val
+	} else {
+		o[key] += val
+	}
+}
+
+class Vector2i {
+	constructor (x=0, y=0) {
+		this.x = x
+		this.y = y
+	}
 }
