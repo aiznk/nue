@@ -1674,6 +1674,24 @@ export class Notebook extends Div {
 		}
 	}
 
+	moveTabTo (tab, index) {
+		if (typeof tab === 'number') {
+			if (tab < 0 || tab >= this.tabs.children.length) {
+				throw new Error('index out of range')
+			}
+			tab = this.tabs.children[tab]
+		}
+
+		let children = this.tabs.children.filter(t => t !== tab)
+		children.splice(index, 0, tab)
+
+		this.tabs.clear()
+		for (let child of children) {
+			this.tabs.add(child)
+		}
+		this.click(tab)
+	}
+
 	click (index) {
 		if (typeof index !== 'number') {
 			let i = 0

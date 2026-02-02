@@ -11,7 +11,7 @@
 			width: 800px;
 			margin: 0 auto;
 		}
-		.hige, .hoge {
+		.page {
 			padding: 1rem;
 		}
 		button {
@@ -23,52 +23,67 @@
 		.btns {
 			margin-top: 1rem;
 		}
-		.btns button:first-child {
+		.btns button:not(:last-child),
+		.page button:not(:last-child) {
 			margin-right: 1rem;
 		}
 	</style>
 	<script type="module">
 		import * as nue from '../nue.js'
 
-		class HigePage extends nue.Div {
-			constructor () {
-				super({ class: 'hige' })
+		class Page extends nue.Div {
+			constructor (name, html) {
+				super({ class: 'page' })
+				this.name = name
 				this.removeBtn = new nue.Button('Remove this tab', ev => {
-					this.emit('removeHigePage')
+					this.emit('removePage', this.name)
 				})
-				this.template(`
-					<p>This is hige content.</p>
-					<p>This is hige content.</p>
-					<p>This is hige content.</p>
-					<p>This is hige content.</p>
-					<p>This is hige content.</p>
-					<Button />
-				`, {
-					components: {
-						Button: this.removeBtn,
-					}
+				this.moveToLeft = new nue.Button('Move to left', ev => {
+					this.emit('moveToLeft', this.name)
 				})
+				this.moveToRight = new nue.Button('Move to right', ev => {
+					this.emit('moveToRight', this.name)
+				})
+				this.template(html)
+				this.add(this.removeBtn)
+				this.add(this.moveToLeft)
+				this.add(this.moveToRight)
 			}
 		}
 
-		class HogePage extends nue.Div {
+		class HigePage extends Page {
 			constructor () {
-				super({ class: 'hoge' })
-				this.removeBtn = new nue.Button('Remove this tab', ev => {
-					this.emit('removeHogePage')
-				})
-				this.template(`
-					<p>That is hoge content.</p>
-					<p>That is hoge content.</p>
-					<p>That is hoge content.</p>
-					<p>That is hoge content.</p>
-					<p>That is hoge content.</p>
-					<Button />
-				`, {
-					components: {
-						Button: this.removeBtn,
-					}
-				})
+				super('hige', `
+					<p>This is hige content.</p>
+					<p>This is hige content.</p>
+					<p>This is hige content.</p>
+					<p>This is hige content.</p>
+					<p>This is hige content.</p>					
+				`)
+			}
+		}
+
+		class HogePage extends Page {
+			constructor () {
+				super('hoge', `
+					<p>This is hoge content.</p>
+					<p>This is hoge content.</p>
+					<p>This is hoge content.</p>
+					<p>This is hoge content.</p>
+					<p>This is hoge content.</p>					
+				`)
+			}
+		}
+
+		class MogePage extends Page {
+			constructor () {
+				super('moge', `
+					<p>This is moge content.</p>
+					<p>This is moge content.</p>
+					<p>This is moge content.</p>
+					<p>This is moge content.</p>
+					<p>This is moge content.</p>					
+				`)
 			}
 		}
 
@@ -76,35 +91,54 @@
 			constructor () {
 				super()
 
-				this.higeTab = new nue.NotebookTab('Hige', new HigePage())
-				this.hogeTab = new nue.NotebookTab('Hoge', new HogePage())
+				this.tabs = {
+					'hige': new nue.NotebookTab('Hige', new HigePage()),
+					'hoge': new nue.NotebookTab('Hoge', new HogePage()),
+					'moge': new nue.NotebookTab('Moge', new MogePage()),
+				}
 
 				this.nb = new nue.Notebook()
-				this.nb.addTab(this.higeTab)
-				this.nb.addTab(this.hogeTab)
+				this.nb.addTab(this.tabs['hige'])
+				this.nb.addTab(this.tabs['hoge'])
+				this.nb.addTab(this.tabs['moge'])
 				this.nb.click(0)
 				this.add(this.nb)
 
 				this.btns = new nue.Div({ class: 'btns' })
 				this.btns.add(new nue.Button('Add hige tab', ev => {
-					this.nb.addTab(this.higeTab)
-					this.nb.click(this.higeTab)
+					this.nb.addTab(this.tabs['hige'])
+					this.nb.click(this.tabs['hige'])
 				}))
 				this.btns.add(new nue.Button('Add hoge tab', ev => {
-					this.nb.addTab(this.hogeTab)
-					this.nb.click(this.hogeTab)
+					this.nb.addTab(this.tabs['hoge'])
+					this.nb.click(this.tabs['hoge'])
+				}))
+				this.btns.add(new nue.Button('Add moge tab', ev => {
+					this.nb.addTab(this.tabs['moge'])
+					this.nb.click(this.tabs['moge'])
 				}))
 				this.add(this.btns)
 			}
 
-			receive (ev) {
-				switch (ev) {
-				case 'removeHigePage':
-					this.nb.removeTab(this.higeTab)
+			receive (key, val) {
+				switch (key) {
+				case 'removePage':
+					this.nb.removeTab(this.tabs[val])
 					break
-				case 'removeHogePage':
-					this.nb.removeTab(this.hogeTab)
-					break
+				case 'moveToLeft': {
+					let i = this.nb.countIndex(this.tabs[val])-1
+					if (i < 0) {
+						i = this.nb.tabs.children.length-1
+					}
+					this.nb.moveTabTo(this.tabs[val], i)
+				} break
+				case 'moveToRight': {
+					let i = this.nb.countIndex(this.tabs[val])+1
+					if (i >= this.nb.tabs.children.length) {
+						i = 0
+					}
+					this.nb.moveTabTo(this.tabs[val], i)
+				} break
 				}
 			}
 		}
