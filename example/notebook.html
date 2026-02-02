@@ -14,6 +14,18 @@
 		.hige, .hoge {
 			padding: 1rem;
 		}
+		button {
+			padding: 0.5rem 1.0rem;
+			border: 1px solid #444;
+			border-radius: 5px;
+			cursor: pointer;
+		}
+		.btns {
+			margin-top: 1rem;
+		}
+		.btns button:first-child {
+			margin-right: 1rem;
+		}
 	</style>
 	<script type="module">
 		import * as nue from '../nue.js'
@@ -21,26 +33,42 @@
 		class HigePage extends nue.Div {
 			constructor () {
 				super({ class: 'hige' })
+				this.removeBtn = new nue.Button('Remove this tab', ev => {
+					this.emit('removeHigePage')
+				})
 				this.template(`
 					<p>This is hige content.</p>
 					<p>This is hige content.</p>
 					<p>This is hige content.</p>
 					<p>This is hige content.</p>
 					<p>This is hige content.</p>
-				`)
+					<Button />
+				`, {
+					components: {
+						Button: this.removeBtn,
+					}
+				})
 			}
 		}
 
 		class HogePage extends nue.Div {
 			constructor () {
 				super({ class: 'hoge' })
+				this.removeBtn = new nue.Button('Remove this tab', ev => {
+					this.emit('removeHogePage')
+				})
 				this.template(`
 					<p>That is hoge content.</p>
 					<p>That is hoge content.</p>
 					<p>That is hoge content.</p>
 					<p>That is hoge content.</p>
 					<p>That is hoge content.</p>
-				`)
+					<Button />
+				`, {
+					components: {
+						Button: this.removeBtn,
+					}
+				})
 			}
 		}
 
@@ -48,11 +76,36 @@
 			constructor () {
 				super()
 
+				this.higeTab = new nue.NotebookTab('Hige', new HigePage())
+				this.hogeTab = new nue.NotebookTab('Hoge', new HogePage())
+
 				this.nb = new nue.Notebook()
-				this.nb.addTab(new nue.NotebookTab('Hige', new HigePage()))
-				this.nb.addTab(new nue.NotebookTab('Hoge', new HogePage()))
+				this.nb.addTab(this.higeTab)
+				this.nb.addTab(this.hogeTab)
 				this.nb.click(0)
 				this.add(this.nb)
+
+				this.btns = new nue.Div({ class: 'btns' })
+				this.btns.add(new nue.Button('Add hige tab', ev => {
+					this.nb.addTab(this.higeTab)
+					this.nb.click(this.higeTab)
+				}))
+				this.btns.add(new nue.Button('Add hoge tab', ev => {
+					this.nb.addTab(this.hogeTab)
+					this.nb.click(this.hogeTab)
+				}))
+				this.add(this.btns)
+			}
+
+			receive (ev) {
+				switch (ev) {
+				case 'removeHigePage':
+					this.nb.removeTab(this.higeTab)
+					break
+				case 'removeHogePage':
+					this.nb.removeTab(this.hogeTab)
+					break
+				}
 			}
 		}
 

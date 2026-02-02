@@ -293,7 +293,19 @@ export class Component {
 		this.elem.prepend(child.elem)
 	}
 
+	has (child) {
+		for (let n of this.elem.childNodes) {
+			if (n === child.elem) {
+				return true
+			}
+		}
+		return false
+	}
+
 	add (child) {
+		if (this.has(child)) {
+			return
+		}
 		child.parent = this
 		this.children.push(child)
 		this.elem.appendChild(child.elem)

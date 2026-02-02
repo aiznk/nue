@@ -626,7 +626,19 @@ export class Component {
 		this.elem.prepend(child.elem)
 	}
 
+	has (child) {
+		for (let n of this.elem.childNodes) {
+			if (n === child.elem) {
+				return true
+			}
+		}
+		return false
+	}
+
 	add (child) {
+		if (this.has(child)) {
+			return
+		}
 		child.parent = this
 		this.children.push(child)
 		this.elem.appendChild(child.elem)
@@ -1634,6 +1646,9 @@ export class Notebook extends Div {
 
 	receive (ev, val) {
 		switch (ev) {
+		default: 
+			this.emit(ev, val)
+			break
 		case 'notebookTabClicked': {
 			let index = this.countIndex(val)
 			this.click(index)
@@ -1645,10 +1660,43 @@ export class Notebook extends Div {
 		this.tabs.add(tab)
 	}
 
+	removeTab (tab) {
+		if (typeof tab === 'number') {
+			tab = this.tabs[index]
+		}
+
+		this.tabs.remove(tab)
+		tab.removeClass('nue_notebook-tab--activate')
+		if (this.tabs.children.length) {
+			this.click(0)
+		} else {
+			this.body.clear()
+		}
+	}
+
 	click (index) {
+		if (typeof index !== 'number') {
+			let i = 0
+			for (let t of this.tabs.children) {
+				if (t === index) {
+					index = i
+					break
+				}
+				i++
+			}
+		}
+
+		if (index < 0 || index >= this.tabs.children.length) {
+			throw new Error('index out of range')
+		}
+
 		let tab = this.tabs.children[index]
-		let oldTab = this.tabs.children[this.curIndex]
-		oldTab.removeClass('nue_notebook-tab--activate')
+
+		if (this.curIndex >= 0 && this.curIndex < this.tabs.children.length) {
+			let oldTab = this.tabs.children[this.curIndex]
+			oldTab.removeClass('nue_notebook-tab--activate')
+		}
+
 		this.body.clear()
 		this.body.add(tab.component)
 		tab.addClass('nue_notebook-tab--activate')
