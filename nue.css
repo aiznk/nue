@@ -140,3 +140,67 @@
 .nue_honest-entry:focus {
 	outline: 0;
 }
+
+.nue_slide-show {
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+  font-family: sans-serif;
+}
+.nue_slide-show_display {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-color: #2b2b2b;
+
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+
+  transition: background-image 0.4s ease-in-out;
+}
+.nue_slide-show_thumbs {
+  display: flex;
+  gap: 10px;
+  margin-top: 14px;
+  padding: 4px;
+
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+.nue_slide-show_thumbs::-webkit-scrollbar {
+  height: 6px;
+}
+.nue_slide-show_thumbs::-webkit-scrollbar-thumb {
+  background: #aaa;
+  border-radius: 10px;
+}
+.nue_slide-show_thumb {
+  flex: 0 0 auto;
+
+  width: 90px;
+  height: 60px;
+
+  background-size: cover;
+  background-position: center;
+
+  border-radius: 8px;
+  cursor: pointer;
+
+  opacity: 0.7;
+  border: 2px solid transparent;
+
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease,
+    border-color 0.2s ease;
+}
+.nue_slide-show_thumb:hover {
+  opacity: 1;
+  transform: scale(1.05);
+}
+.nue_slide-show_thumb.nue_slide-show_thumb--active {
+  opacity: 1;
+  border-color: #4aa3ff;
+}
