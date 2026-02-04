@@ -19,6 +19,7 @@ export class Component {
 		this.mountElem = document.querySelector(query)
 		this.mountElem.innerHTML = ''
 		this.mountElem.appendChild(this.elem)
+		return this
 	}
 
 	insertTextToCaretPos(text) {
@@ -28,6 +29,7 @@ export class Component {
 		this.elem.value = value.slice(0, start) + text + value.slice(end);
 		this.elem.selectionStart = this.elem.selectionEnd = start + text.length;
 		this.elem.focus();
+		return this
 	}
 
 	scrollToBottom ({ caret=null }={}) {
@@ -39,6 +41,8 @@ export class Component {
 			this.elem.setSelectionRange(this.elem.value.length, this.elem.value.length)
 			break
 		}
+		
+		return this
 	}
 
 	len () {
@@ -236,16 +240,19 @@ export class Component {
 
 	setStyle (val) {
 		this.elem.setAttribute('style', val)
+		return this
 	}
 
 	setClass (val) {
 		this.elem.setAttribute('class', val)
+		return this
 	}
 
 	removeClass (val) {
 		let cls = this.elem.className.split(' ')
 		cls = cls.filter(el => el !== val)
 		this.elem.className = cls.join(' ')
+		return this
 	}
 
 	addClass (val) {
@@ -254,6 +261,7 @@ export class Component {
 			cls.push(val)
 		}
 		this.elem.className = cls.join(' ')
+		return this
 	}
 
 	getText () {
@@ -268,6 +276,7 @@ export class Component {
 
 	addText (text) {
 		this.elem.textContent += text
+		return this
 	}
 
 	getValue () {
@@ -280,6 +289,7 @@ export class Component {
 
 	setHTML (html) {
 		this.elem.innerHTML = html
+		return this
 	}
 
 	setValue (value) {
@@ -291,6 +301,7 @@ export class Component {
 		child.parent = this
 		this.children.unshift(child)
 		this.elem.prepend(child.elem)
+		return this
 	}
 
 	has (child) {
