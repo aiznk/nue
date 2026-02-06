@@ -248,6 +248,10 @@ export class Component {
 		return this
 	}
 
+	toggleClass (val) {
+		this.elem.classList.toggle(val)
+	}
+
 	removeClass (val) {
 		let cls = this.elem.className.split(' ')
 		cls = cls.filter(el => el !== val)

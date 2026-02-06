@@ -19,10 +19,10 @@ export class Notebook extends Div {
 		super({ class: 'nue_notebook' })
 		this.curIndex = 0
 
-		this.tabs = new Div({ class: 'nue_notebook_tabs' })
+		this.tabs = new Div({ class: 'nue_notebook__tabs' })
 		this.add(this.tabs)
 
-		this.body = new Div({ class: 'nue_notebook_body' })
+		this.body = new Div({ class: 'nue_notebook__body' })
 		this.add(this.body)
 	}
 

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Dropdown</title>
+	<link rel="stylesheet" href="../nue.css">
+	<style>
+		#root {
+			display: flex;
+			justify-content: center;
+			padding-top: 4rem;
+		}
+		button:not(:last-child) {
+			margin-right: 1rem;
+		}
+	</style>
+	<script type="module">
+		import * as nue from '../nue.js'
+
+		class Root extends nue.Root {
+			constructor () {
+				super('div', { id: 'root' })
+				this.d1 = new nue.Dropdown()
+				this.d1.addItem(new nue.DropdownItem('hige'))
+				this.d1.addItem(new nue.DropdownItem('hoge'))
+				this.d1.addItem(new nue.DropdownItem('moge'))
+				this.add(this.d1)
+				this.d2 = new nue.Dropdown('CLICK ME!')
+				this.d2.addItem(new nue.DropdownItem('Google', 'https://google.com'))
+				this.d2.addItem(new nue.DropdownItem('HOGE'))
+				this.d2.addItem(new nue.DropdownItem('MOGE'))
+				this.add(this.d2)
+			}
+		}
+
+		document.addEventListener('DOMContentLoaded', () => {
+			let root = new Root()
+			root.mount('#app')
+		})
+	</script>
+</head>
+<body>
+	<div id="app"></div>
+</body>
+</html>

@@ -34,14 +34,14 @@
 	.nue_paned-frame {
 		height: 100%;
 	}
-	.nue_paned-frame_divid {
+	.nue_paned-frame__divid {
 		background: #ccc;
 		cursor: col-resize; /* 横パネル */
 	}
-	.nue_paned-frame_divid.horizontal {
+	.nue_paned-frame__divid.horizontal {
 		cursor: col-resize;
 	}
-	.nue_paned-frame_divid.vertical {
+	.nue_paned-frame__divid.vertical {
 		cursor: row-resize;
 	}
 
@@ -69,7 +69,7 @@
 	}
 
 	/* スプリッタに影をつけると操作しやすい */
-	.nue_paned-frame_divid::after {
+	.nue_paned-frame__divid::after {
 		content: "";
 		position: absolute;
 		background: rgba(0,0,0,0.1);

@@ -1,7 +1,7 @@
 export class SlideThumb extends Span {
 	constructor (url) {
 		super({
-			class: 'nue_slide-show_thumb',
+			class: 'nue_slide-show__thumb',
 		}, {
 			events: ['click']
 		})
@@ -13,7 +13,7 @@ export class SlideThumb extends Span {
 
 	async onClick (ev) {
 		await this.emit('inactiveAllThumbs')
-		this.addClass('nue_slide-show_thumb--active')
+		this.addClass('nue_slide-show__thumb--active')
 		await this.emit('slideShowClickThumb', this.url)
 	}
 }
@@ -21,9 +21,9 @@ export class SlideThumb extends Span {
 export class SlideShow extends Div {
 	constructor () {
 		super({ class: 'nue_slide-show' })
-		this.display = new Div({ class: 'nue_slide-show_display' })
+		this.display = new Div({ class: 'nue_slide-show__display' })
 		this.add(this.display)
-		this.thumbs = new Div({ class: 'nue_slide-show_thumbs' })
+		this.thumbs = new Div({ class: 'nue_slide-show__thumbs' })
 		this.add(this.thumbs)
 		this.index = 0
 	}
@@ -41,7 +41,7 @@ export class SlideShow extends Div {
 
 	inactiveAllThumbs () {
 		for (let thumb of this.thumbs.children) {
-			thumb.removeClass('nue_slide-show_thumb--active')
+			thumb.removeClass('nue_slide-show__thumb--active')
 		}
 	}
 

@@ -5,6 +5,20 @@ export class Tag extends Component {
 	}
 }
 
+export class A extends Tag {
+	constructor (attrs={}, opts={}) {
+		opts = _setopts(opts, 'events', [])
+		super('a', attrs, opts)
+	}
+}
+
+export class Br extends Tag {
+	constructor (attrs={}, opts={}) {
+		opts = _setopts(opts, 'events', [])
+		super('br', attrs, opts)
+	}
+}
+
 export class Ul extends Tag {
 	constructor (attrs={}, opts={}) {
 		opts = _setopts(opts, 'events', [])

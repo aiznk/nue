@@ -581,6 +581,10 @@ export class Component {
 		return this
 	}
 
+	toggleClass (val) {
+		this.elem.classList.toggle(val)
+	}
+
 	removeClass (val) {
 		let cls = this.elem.className.split(' ')
 		cls = cls.filter(el => el !== val)
@@ -675,6 +679,20 @@ export class Tag extends Component {
 	constructor (name, attrs={}, opts={}) {
 		opts = _setopts(opts, 'events', [])
 		super(name, attrs, opts)
+	}
+}
+
+export class A extends Tag {
+	constructor (attrs={}, opts={}) {
+		opts = _setopts(opts, 'events', [])
+		super('a', attrs, opts)
+	}
+}
+
+export class Br extends Tag {
+	constructor (attrs={}, opts={}) {
+		opts = _setopts(opts, 'events', [])
+		super('br', attrs, opts)
 	}
 }
 
@@ -1312,9 +1330,9 @@ export class Divid extends Div {
 		super({}, { events: ['mousedown'] })
 
 		if (mode === 'horizontal') {
-			this.setClass('nue_paned-frame_divid nue_paned-frame_divid--horizontal')
+			this.setClass('nue_paned-frame__divid nue_paned-frame__divid--horizontal')
 		} else {
-			this.setClass('nue_paned-frame_divid nue_paned-frame_divid--vertical')			
+			this.setClass('nue_paned-frame__divid nue_paned-frame__divid--vertical')			
 		}
 		this.cs = [c1, c2]
 	}
@@ -1637,10 +1655,10 @@ export class Notebook extends Div {
 		super({ class: 'nue_notebook' })
 		this.curIndex = 0
 
-		this.tabs = new Div({ class: 'nue_notebook_tabs' })
+		this.tabs = new Div({ class: 'nue_notebook__tabs' })
 		this.add(this.tabs)
 
-		this.body = new Div({ class: 'nue_notebook_body' })
+		this.body = new Div({ class: 'nue_notebook__body' })
 		this.add(this.body)
 	}
 
@@ -1735,7 +1753,7 @@ export class Notebook extends Div {
 export class SlideThumb extends Span {
 	constructor (url) {
 		super({
-			class: 'nue_slide-show_thumb',
+			class: 'nue_slide-show__thumb',
 		}, {
 			events: ['click']
 		})
@@ -1747,7 +1765,7 @@ export class SlideThumb extends Span {
 
 	async onClick (ev) {
 		await this.emit('inactiveAllThumbs')
-		this.addClass('nue_slide-show_thumb--active')
+		this.addClass('nue_slide-show__thumb--active')
 		await this.emit('slideShowClickThumb', this.url)
 	}
 }
@@ -1755,9 +1773,9 @@ export class SlideThumb extends Span {
 export class SlideShow extends Div {
 	constructor () {
 		super({ class: 'nue_slide-show' })
-		this.display = new Div({ class: 'nue_slide-show_display' })
+		this.display = new Div({ class: 'nue_slide-show__display' })
 		this.add(this.display)
-		this.thumbs = new Div({ class: 'nue_slide-show_thumbs' })
+		this.thumbs = new Div({ class: 'nue_slide-show__thumbs' })
 		this.add(this.thumbs)
 		this.index = 0
 	}
@@ -1775,7 +1793,7 @@ export class SlideShow extends Div {
 
 	inactiveAllThumbs () {
 		for (let thumb of this.thumbs.children) {
-			thumb.removeClass('nue_slide-show_thumb--active')
+			thumb.removeClass('nue_slide-show__thumb--active')
 		}
 	}
 
@@ -1809,6 +1827,69 @@ export class SlideShow extends Div {
 			this.thumbs.add(new SlideThumb(obj.src))
 		}
 		this.showImage(this.thumbs.children[0].url)
+	}
+}
+export class DropdownItem extends Li {
+	constructor (text, href='#') {
+		super({ class: 'nue_dropdown__item' })
+		this.link = new A()
+		this.link.setText(text)
+		this.link.setAttr('href', href)
+		this.link.setClass('nue_dropdown__link')
+		this.add(this.link)
+	}
+}
+
+class DropdownTrigger extends Button {
+	constructor (text) {
+		super(text, ev => {}, { class: 'nue_dropdown__trigger' })
+	}
+}
+
+class DropdownMenu extends Ul {
+	constructor () {
+		super({ class: 'nue_dropdown__menu' })
+	}
+}
+
+export class Dropdown extends Div {
+	constructor (trigger='Click me!') {
+		super({
+			class: 'nue_dropdown',
+		})
+		this.trigger = new DropdownTrigger(trigger)
+		this.add(this.trigger)
+		this.menu = new DropdownMenu()
+		this.add(this.menu)
+
+		document.addEventListener('click', e => {
+		  const dropdown = e.target.closest(".nue_dropdown");
+		  const allDropdowns = document.querySelectorAll(".nue_dropdown");
+
+		  allDropdowns.forEach(d => d.classList.remove("nue_dropdown--open"));
+
+		  if (!dropdown) {
+		  	return;
+		  }
+
+		  const trigger = e.target.closest(".nue_dropdown__trigger");
+		  if (!trigger) {
+		  	return;
+		  }
+
+		  dropdown.classList.toggle("nue_dropdown--open");
+		})
+		document.addEventListener('keydown', e => {
+			if (e.key === 'Escape') {
+				document
+					.querySelectorAll('.nue_dropdown')
+					.forEach(d => d.classList.remove('nue_dropdown--open'))
+			}
+		})
+	}
+
+	addItem (item) {
+		this.menu.add(item)
 	}
 }
 export function test () {

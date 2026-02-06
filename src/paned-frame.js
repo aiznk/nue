@@ -3,9 +3,9 @@ export class Divid extends Div {
 		super({}, { events: ['mousedown'] })
 
 		if (mode === 'horizontal') {
-			this.setClass('nue_paned-frame_divid nue_paned-frame_divid--horizontal')
+			this.setClass('nue_paned-frame__divid nue_paned-frame__divid--horizontal')
 		} else {
-			this.setClass('nue_paned-frame_divid nue_paned-frame_divid--vertical')			
+			this.setClass('nue_paned-frame__divid nue_paned-frame__divid--vertical')			
 		}
 		this.cs = [c1, c2]
 	}
