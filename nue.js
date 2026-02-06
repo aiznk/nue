@@ -1829,13 +1829,32 @@ export class SlideShow extends Div {
 		this.showImage(this.thumbs.children[0].url)
 	}
 }
+class DropdownLink extends A {
+	constructor (text, href, onClick) {
+		super({
+			class: 'nue_dropdown__link',
+			href,
+		}, {
+			events: ['click'],
+		})
+		this.setText(text)
+		this.onClick_ = onClick
+	}
+
+	onClick (ev) {
+		if (this.onClick_) {
+			this.onClick_(ev)
+		}
+	}
+}
+
 export class DropdownItem extends Li {
-	constructor (text, href='#') {
+	constructor (text, {
+		href='#',
+		onClick=null,
+	}={}) {
 		super({ class: 'nue_dropdown__item' })
-		this.link = new A()
-		this.link.setText(text)
-		this.link.setAttr('href', href)
-		this.link.setClass('nue_dropdown__link')
+		this.link = new DropdownLink(text, href, onClick)
 		this.add(this.link)
 	}
 }

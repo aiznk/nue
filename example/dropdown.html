@@ -22,12 +22,26 @@
 			constructor () {
 				super('div', { id: 'root' })
 				this.d1 = new nue.Dropdown()
-				this.d1.addItem(new nue.DropdownItem('hige'))
-				this.d1.addItem(new nue.DropdownItem('hoge'))
-				this.d1.addItem(new nue.DropdownItem('moge'))
+				this.d1.addItem(new nue.DropdownItem('hige', {
+					onClick: ev => {
+						alert('hige')
+					},
+				}))
+				this.d1.addItem(new nue.DropdownItem('hoge', {
+					onClick: ev => {
+						alert('hoge')
+					},
+				}))
+				this.d1.addItem(new nue.DropdownItem('moge', {
+					onClick: ev => {
+						alert('moge')
+					},
+				}))
 				this.add(this.d1)
 				this.d2 = new nue.Dropdown('CLICK ME!')
-				this.d2.addItem(new nue.DropdownItem('Google', 'https://google.com'))
+				this.d2.addItem(new nue.DropdownItem('Google', {
+					href: 'https://google.com',
+				}))
 				this.d2.addItem(new nue.DropdownItem('HOGE'))
 				this.d2.addItem(new nue.DropdownItem('MOGE'))
 				this.add(this.d2)
