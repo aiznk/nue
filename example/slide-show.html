@@ -4,16 +4,16 @@
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<title>Slide Show</title>
-	<link rel="stylesheet" href="../../nue.css">
+	<link rel="stylesheet" href="../nue.css">
 	<script type="module">
-		import * as nue from '../../nue.js'
+		import * as nue from '../nue.js'
 
 		class Root extends nue.Root {
 			constructor () {
 				super()
 				this.slide = new nue.SlideShow()
 				for (let i = 0; i < 12; i++) {
-					this.slide.addImage(`./${i%6}.png`)
+					this.slide.addImage(`./slide-show/${i%6}.png`)
 				}
 				this.add(this.slide)
 			}
