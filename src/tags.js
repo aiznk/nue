@@ -136,6 +136,10 @@ export class Select extends Tag {
 		opts = _setopts(opts, 'events', ['change'])
 		super('select', attrs, opts)
 	}
+
+	getValue () {
+		return this.elem.value
+	}
 }
 
 export class Section extends Tag {
