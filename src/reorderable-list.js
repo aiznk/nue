@@ -3,7 +3,7 @@ export class ReorderableList extends Ul {
 		upText='Up', 
 		downText='Down',
 	}={}) {
-		super()
+		super({ class: 'nue_reorderable-list' })
 		this.upText = upText
 		this.downText = downText
 	}
