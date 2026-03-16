@@ -44,6 +44,7 @@ export class ReorderableList extends Ul {
 			}
 			upper = child
 		}
+		
 		this.emit('reorderableListMoveUpItem')
 	}
 
