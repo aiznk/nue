@@ -12,4 +12,5 @@ cat src/filter.js >> nue.js
 cat src/notebook.js >> nue.js
 cat src/slide-show.js >> nue.js
 cat src/dropdown.js >> nue.js
+cat src/reorderable-list.js >> nue.js
 cat src/test.js >> nue.js
