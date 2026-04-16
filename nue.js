@@ -1703,6 +1703,7 @@ export class Notebook extends Div {
 
 	removeTab (tab) {
 		if (typeof tab === 'number') {
+			let index = tab
 			tab = this.tabs[index]
 		}
 
