@@ -1,11 +1,11 @@
 export class ReorderableList extends Ul {
-	constructor ({
-		upText='Up', 
-		downText='Down',
-	}={}) {
-		super({ class: 'nue_reorderable-list' })
-		this.upText = upText
-		this.downText = downText
+	constructor (attrs={}, opts={}) {
+		if (!('class' in attrs)) {
+			attrs['class'] = 'nue_reorderable-list'
+		}
+		super(attrs, opts)
+		this.upText = opts.upText || 'Up'
+		this.downText = opts.downText || 'Down'
 	}
 
 	addItem (item) {
