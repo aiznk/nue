@@ -1655,8 +1655,11 @@ export class NotebookTab extends Span {
 }
 
 export class Notebook extends Div {
-	constructor () {
-		super({ class: 'nue_notebook' })
+	constructor (attrs={}, opts={}) {
+		if (!('class' in attrs)) {
+			attrs['class'] = 'nue_notebook'
+		}
+		super(attrs, opts)
 		this.curIndex = 0
 
 		this.tabs = new Div({ class: 'nue_notebook__tabs' })
@@ -1664,6 +1667,11 @@ export class Notebook extends Div {
 
 		this.body = new Div({ class: 'nue_notebook__body' })
 		this.add(this.body)
+	}
+
+	clear () {
+		this.tabs.clear()
+		this.body.clear()
 	}
 
 	countIndex (tab) {
@@ -1920,7 +1928,7 @@ export class ReorderableList extends Ul {
 		upText='Up', 
 		downText='Down',
 	}={}) {
-		super()
+		super({ class: 'nue_reorderable-list' })
 		this.upText = upText
 		this.downText = downText
 	}
@@ -1961,6 +1969,7 @@ export class ReorderableList extends Ul {
 			}
 			upper = child
 		}
+		
 		this.emit('reorderableListMoveUpItem')
 	}
 
