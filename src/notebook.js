@@ -26,6 +26,11 @@ export class Notebook extends Div {
 		this.add(this.body)
 	}
 
+	clear () {
+		this.tabs.clear()
+		this.body.clear()
+	}
+
 	countIndex (tab) {
 		let i = 0
 		for (let t of this.tabs.children) {
