@@ -15,8 +15,11 @@ export class NotebookTab extends Span {
 }
 
 export class Notebook extends Div {
-	constructor () {
-		super({ class: 'nue_notebook' })
+	constructor (attrs) {
+		if (!('class' in attrs)) {
+			attrs['class'] = 'nue_notebook'
+		}
+		super(attrs)
 		this.curIndex = 0
 
 		this.tabs = new Div({ class: 'nue_notebook__tabs' })
