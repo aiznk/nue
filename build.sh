@@ -13,4 +13,6 @@ cat src/notebook.js >> nue.js
 cat src/slide-show.js >> nue.js
 cat src/dropdown.js >> nue.js
 cat src/reorderable-list.js >> nue.js
+cat src/popup.js >> nue.js
+cat src/picture-frame.js >> nue.js
 cat src/test.js >> nue.js
