@@ -404,6 +404,7 @@ export class Component {
 	}
 
 	gen (cname, ...args) {
+		console.warn(`deprecated method "gen" since v0.3.0`)
 		let c
 
 		switch (cname.toLowerCase()) {
