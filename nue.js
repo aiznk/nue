@@ -674,6 +674,10 @@ export class Component {
 		this.children = []
 		return this
 	}
+
+	focus () {
+		this.elem.focus()
+	}
 }
 
 export class Tag extends Component {
