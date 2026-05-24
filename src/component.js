@@ -120,6 +120,8 @@ export class Component {
 			'pointercancel': this.onPointerCancel.bind(this),
 			'wheel': this.onWheel.bind(this),
 			'scroll': this.onScroll.bind(this),
+			'focus': this.onFocus.bind(this),
+			'blur': this.onBlur.bind(this),
 		}
 		const events = _oget(this.opts, 'events', null)
 		if (events == null) {
@@ -155,6 +157,8 @@ export class Component {
 	async onMouseEnter (ev) {}
 	async onMouseLeave (ev) {}
 	async onContextMenu (ev) {}
+	async onFocus (ev) {}
+	async onBlur (ev) {}
 
 	async emit (name, value) {
 		if (this.parent) {
@@ -344,6 +348,10 @@ export class Component {
 
 	focus () {
 		this.elem.focus()
+	}
+
+	blur () {
+		this.elem.blur()
 	}
 }
 
