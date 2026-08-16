@@ -695,6 +695,13 @@ export class Tag extends Component {
 	}
 }
 
+export class Video extends Tag {
+	constructor (attrs={}, opts={}) {
+		opts = _setopts(opts, 'events', [])
+		super('video', attrs, opts)
+	}
+}
+
 export class A extends Tag {
 	constructor (attrs={}, opts={}) {
 		opts = _setopts(opts, 'events', [])
