@@ -228,9 +228,11 @@ export class HonestTableRow extends Tr {
 export class HonestTable extends Table {
 	constructor (attrs={}, opts={}) {
 		_setopts(opts, 'events', ['mouseleave', 'mousemove', 'mouseup'])
-		attrs = Object.assign(attrs, {
-			class: 'nue_honest-table',
-		})
+		if (attrs.class) {
+			attrs.class += ' nue_honest-table'
+		} else {
+			attrs.class = 'nue_honest-table'
+		}
 		super(attrs, opts)
 		this.matrix = []	
 		this.colgroup = new Colgroup()
