@@ -292,16 +292,17 @@ export class HonestTable extends Table {
 		return row
 	}
 
-	addRow (row) {
-		let hrow = this.genHeadRow(row.len())
+	setHeaders (row) {
 		this.thead.clear()
-		this.thead.add(hrow)
+		this.thead.add(row)
 
 		this.colgroup.clear()
-		for (let i = 0; i < hrow.len(); i++) {
+		for (let i = 0; i < row.len(); i++) {
 			this.colgroup.add(new Col())
 		}
+	}
 
+	addNumberRow (row) {
 		let r = []
 		let h = this.matrix.length
 
@@ -318,6 +319,25 @@ export class HonestTable extends Table {
 		let rcell = new HonestTableRowGrabCell(h)
 		rcell.setText(h+1)
 		row.unshift(rcell)
+		row.pos.y = h
+		row.addClass(`nue_honest-table-row_pos-y-${h}`)
+		this.tbody.add(row)		
+	}
+
+	addRow (row) {
+		let r = []
+		let h = this.matrix.length
+
+		for (let x = 0; x < row.children.length; x++) {
+			let cell = row.children[x]
+			cell.pos.x = x
+			cell.pos.y = h
+			cell.addClass(`nue_honest-table-cell_pos-x-${x}`)
+			cell.addClass(`nue_honest-table-cell_pos-y-${h}`)
+			r.push(cell)
+		}
+		this.matrix.push(r)
+
 		row.pos.y = h
 		row.addClass(`nue_honest-table-row_pos-y-${h}`)
 		this.tbody.add(row)
