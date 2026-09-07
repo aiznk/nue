@@ -34,15 +34,12 @@ export class Link extends Tag {
 			return
 		}
 
-		for (let key in this.state) {
-			let o = this.state[key]
-			if (o instanceof Ref) {
-				this.state[key] = o.value
-			}
-		}
-
 		history.pushState(this.state, '', this.href)
-		this.emit('linkClick', this.href)	
+		
+		ev.state = this.state
+		ev.href = this.href
+
+		this.emit('linkClick', ev)
 	}
 }
 
