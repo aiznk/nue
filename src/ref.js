@@ -3,20 +3,26 @@ export class Ref {
 		this.value = value
 		this.getListeners = []
 		this.setListeners = []
-		this.proxy = new Proxy(this, {
-			get (target, prop) {
+
+		return new Proxy(this, {
+			get (target, prop, receiver) {
+				const value = Reflect.get(target, prop, receiver)
+
 				for (let fn of target.getListeners) {
-					fn(target[prop])
+					fn(value)
 				}
-				return target[prop]
+
+				return value
 			},
-			set (target, prop, val) {
-				let old = target[prop]
-				target[prop] = val
+			set (target, prop, val, receiver) {
+				let old = Reflect.get(target, prop, receiver)
+				const result = Reflect.set(target, prop, val, receiver)
+
 				for (let fn of target.setListeners) {
 					fn(old, val)
 				}
-				return true
+
+				return result
 			},			
 		})
 	}
