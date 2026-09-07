@@ -1,43 +1,51 @@
-export function ref (value) {
-	let obj = {
-		value,
-		getListeners: [],
-		setListeners: [],
+export class Ref {
+	constructor (value) {
+		this.value = value
+		this.getListeners = []
+		this.setListeners = []
+		this.proxy = new Proxy(this, {
+			get (target, prop) {
+				for (let fn of target.getListeners) {
+					fn(target[prop])
+				}
+				return target[prop]
+			},
+			set (target, prop, val) {
+				let old = target[prop]
+				target[prop] = val
+				for (let fn of target.setListeners) {
+					fn(old, val)
+				}
+				return true
+			},			
+		})
 	}
-	let proxy = new Proxy(obj, {
-		get (target, prop) {
-			for (let fn of target.getListeners) {
-				fn(target[prop])
-			}
-			return target[prop]
-		},
-		set (target, prop, val) {
-			let old = target[prop]
-			target[prop] = val
-			for (let fn of target.setListeners) {
-				fn(old, val)
-			}
-			return true
-		},
-	})
-	obj.call = (funcname, ...args) => {
-		obj.value[funcname](...args)
-		for (let fn of obj.setListeners) {
-			fn(obj.value, obj.value)
+
+	call (funcname, ...args) {
+		this.value[funcname](...args)
+		for (let fn of this.setListeners) {
+			fn(this.value, this.value)
 		}
 	}
-	obj.onGet = fn => {
-		obj.getListeners.push(fn)
+
+	onGet (fn) {
+		this.getListeners.push(fn)
 	}
-	obj.onSet = fn => {
-		obj.setListeners.push(fn)
+
+	onSet (fn) {
+		this.setListeners.push(fn)
 	}
-	obj.removeGetListener = fn => {
-		obj.getListeners = obj.getListeners.filter(func => func !== fn)
+
+	removeGetListener (fn) {
+		this.getListeners = this.getListeners.filter(func => func !== fn)
 	}
-	obj.removeSetListener = fn => {
-		obj.setListeners = obj.setListeners.filter(func => func !== fn)
+
+	removeSetListener (fn) {
+		this.setListeners = this.setListeners.filter(func => func !== fn)
 	}
-	return proxy
+}
+
+export function ref (value) {
+	return new Ref(value)
 }
 

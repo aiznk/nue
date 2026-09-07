@@ -12,6 +12,40 @@ export class Video extends Tag {
 	}
 }
 
+export class Link extends Tag {
+	constructor (text=null, state={}, href=null, attrs={}, opts={}) {
+		opts = _setopts(opts, 'events', ['click'])
+		
+		if (attrs.class) {
+			attrs.class += ' nue_link'
+		} else {
+			attrs.class = 'nue_link'
+		}
+
+		super('span', attrs, opts)
+		
+		this.state = state
+		this.href = href
+		this.setText(text ?? '')
+	}
+
+	onClick (ev) {
+		if (!this.href) {
+			return
+		}
+
+		for (let key in this.state) {
+			let o = this.state[key]
+			if (o instanceof Ref) {
+				this.state[key] = o.value
+			}
+		}
+
+		history.pushState(this.state, '', this.href)
+		this.emit('linkClick', this.href)	
+	}
+}
+
 export class A extends Tag {
 	constructor (attrs={}, opts={}) {
 		opts = _setopts(opts, 'events', [])
