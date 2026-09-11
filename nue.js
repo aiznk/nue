@@ -669,6 +669,9 @@ export class Component {
 		return false
 	}
 
+	onMount (parent) {
+	}
+
 	add (child) {
 		if (this.has(child)) {
 			return
@@ -676,6 +679,7 @@ export class Component {
 		child.parent = this
 		this.children.push(child)
 		this.elem.appendChild(child.elem)
+		child.onMount(this)
 		return this
 	}
 
